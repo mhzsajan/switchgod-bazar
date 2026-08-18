@@ -42,7 +42,17 @@ export function getAuthCredentials(context?: any): {
     authCred = Cookie.get(AUTH_CRED);
   }
   if (authCred) {
-    return JSON.parse(authCred);
+    const cred = JSON.parse(authCred);
+    if (!cred.role && Array.isArray(cred.permissions)) {
+      cred.role = cred.permissions.includes(SUPER_ADMIN)
+        ? SUPER_ADMIN
+        : cred.permissions.includes(STORE_OWNER)
+          ? STORE_OWNER
+          : cred.permissions.includes(STAFF)
+            ? STAFF
+            : null;
+    }
+    return cred;
   }
   return { token: null, permissions: null, role: null };
 }

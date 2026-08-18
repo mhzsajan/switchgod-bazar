@@ -9,6 +9,7 @@ import { useMeQuery } from '@/data/user';
 import { getIcon } from '@/utils/get-icon';
 import * as sidebarIcons from '@/components/icons/sidebar';
 import { useRouter } from 'next/router';
+import { Routes } from '@/config/routes';
 import { getAuthCredentials, hasAccess } from '@/utils/auth-utils';
 
 export default function AuthorizedMenu() {
@@ -82,7 +83,8 @@ export default function AuthorizedMenu() {
           <div className="space-y-0.5 py-2">
             {siteSettings?.authorizedLinks?.map(
               ({ href, labelTransKey, icon, permission }, index) => {
-                const hasPermission = permission?.includes(role!);
+                const hasPermission =
+                  permission?.includes(role!) || href === Routes.logout;
                 return (
                   <Fragment key={index}>
                     {hasPermission && (
