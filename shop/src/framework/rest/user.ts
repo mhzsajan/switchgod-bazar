@@ -379,6 +379,26 @@ export function useResendVerificationEmail() {
 
   return { mutate, isLoading };
 }
+export function useVerifyEmail() {
+  const { t } = useTranslation('common');
+  const router = useRouter();
+  const { setEmailVerified } = useToken();
+  const { mutate, isLoading } = useMutation(client.users.verifyEmail, {
+    onSuccess: (data) => {
+      if (data?.success) {
+        setEmailVerified(true);
+        toast.success(t('PICKBAZAR_MESSAGE.EMAIL_VERIFIED_SUCCESSFUL'));
+        router.push('/profile');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message);
+    },
+  });
+
+  return { mutate, isLoading };
+}
+
 export function useLogout() {
   const queryClient = useQueryClient();
   const { removeToken } = useToken();

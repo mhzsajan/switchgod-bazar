@@ -70,6 +70,18 @@ export class AuthController {
   me(@Req() req: any) {
     return this.authService.me(req.user?.email);
   }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('email/verification-notification')
+  resendVerificationEmail(@Req() req: any) {
+    return this.authService.resendVerificationEmail(req.user?.email);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('verify-email')
+  verifyEmail(@Req() req: any, @Body() body: { code: string }) {
+    return this.authService.verifyEmail(req.user?.email, body.code);
+  }
   @Post('add-points')
   addWalletPoints(@Body() addPointsDto: any) {
     return this.authService.me();

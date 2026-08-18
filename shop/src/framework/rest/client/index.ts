@@ -455,6 +455,12 @@ class Client {
         {},
       );
     },
+    verifyEmail: (input: { code: string }) => {
+      return HttpClient.post<EmailChangeResponse>(
+        API_ENDPOINTS.USERS_VERIFY_EMAIL,
+        input,
+      );
+    },
   };
   wishlist = {
     all: (params: WishlistQueryOptions) =>

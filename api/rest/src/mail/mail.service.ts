@@ -89,6 +89,25 @@ export class MailService {
     });
   }
 
+  async sendEmailVerificationEmail(
+    to: string,
+    code: string,
+  ): Promise<boolean> {
+    const html = this.layout(
+      'Verify Your Email',
+      `
+        <p style="color:#374151">Welcome to SwitchGod Bazar! Please confirm your email address by entering the code below:</p>
+        <div style="background:#f3f4f6;border-radius:6px;padding:16px;text-align:center;font-size:24px;font-weight:bold;letter-spacing:8px;color:#111827">${code}</div>
+        <p style="color:#374151">This code is valid for <strong>30 minutes</strong>. Your account will remain inactive until your email is verified.</p>
+      `,
+    );
+    return this.sendMail({
+      to,
+      subject: 'SwitchGod Bazar — Verify Your Email',
+      html,
+    });
+  }
+
   async sendWelcomeEmail(to: string, name: string): Promise<boolean> {
     const html = this.layout(
       `Welcome to SwitchGod Bazar, ${name}!`,

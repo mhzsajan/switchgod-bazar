@@ -1,4 +1,10 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { MailService } from 'src/mail/mail.service';
@@ -32,10 +38,34 @@ interface PasswordReset {
   expiresAt: number;
 }
 
+interface EmailVerification {
+  email: string;
+  token: string;
+  expiresAt: number;
+}
+
 const RESET_TTL_MS = 30 * 60 * 1000;
+const VERIFY_TTL_MS = 30 * 60 * 1000;
+
+function adminEmails(): string[] {
+  return (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+}
 
 function resetsFile(): string {
   return path.join(process.cwd(), 'src', 'db', 'pickbazar', 'password-resets.json');
+}
+
+function verificationsFile(): string {
+  return path.join(
+    process.cwd(),
+    'src',
+    'db',
+    'pickbazar',
+    'email-verifications.json',
+  );
 }
 
 function loadResets(): PasswordReset[] {
@@ -47,10 +77,20 @@ function loadResets(): PasswordReset[] {
   }
 }
 
+function loadVerifications(): EmailVerification[] {
+  try {
+    if (!fs.existsSync(verificationsFile())) return [];
+    return JSON.parse(fs.readFileSync(verificationsFile(), 'utf8'));
+  } catch {
+    return [];
+  }
+}
+
 @Injectable()
 export class AuthService {
   private users: User[] = users;
   private resets: PasswordReset[] = loadResets();
+  private verifications: EmailVerification[] = loadVerifications();
 
   constructor(
     private jwtService: JwtService,
@@ -68,6 +108,20 @@ export class AuthService {
     const data = JSON.stringify(this.resets, null, 2);
     fs.writeFileSync(resetsFile(), data);
     const distFile = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'password-resets.json');
+    fs.mkdirSync(path.dirname(distFile), { recursive: true });
+    fs.writeFileSync(distFile, data);
+  }
+
+  private saveVerifications() {
+    const data = JSON.stringify(this.verifications, null, 2);
+    fs.writeFileSync(verificationsFile(), data);
+    const distFile = path.join(
+      process.cwd(),
+      'dist',
+      'db',
+      'pickbazar',
+      'email-verifications.json',
+    );
     fs.mkdirSync(path.dirname(distFile), { recursive: true });
     fs.writeFileSync(distFile, data);
   }
@@ -98,19 +152,25 @@ export class AuthService {
         ? Math.max(...this.users.map((u) => u.id))
         : 0;
 
+    const isAdmin = adminEmails().includes(createUserInput.email.toLowerCase());
+    const permissionNames = isAdmin
+      ? ['super_admin', 'customer']
+      : ['customer'];
+
     const user: any = {
       id: maxId + 1,
       name: createUserInput.name,
       email: createUserInput.email,
       password: hashedPassword,
       is_active: 1,
-      email_verified: true,
+      email_verified: false,
       created_at: new Date(),
       updated_at: new Date(),
-      permissions: [
-        { id: 1, name: 'super_admin', guard_name: 'api' },
-        { id: 2, name: 'customer', guard_name: 'api' },
-      ],
+      permissions: permissionNames.map((name) => ({
+        id: name === 'super_admin' ? 1 : 2,
+        name,
+        guard_name: 'api',
+      })),
       profile: {
         id: maxId + 1,
         avatar: null,
@@ -129,11 +189,95 @@ export class AuthService {
     this.users.push(user);
     this.saveUsers();
 
+    const verificationCode = this.issueVerificationCode(user.email);
+
+    const sent = await this.mailService.sendEmailVerificationEmail(
+      user.email,
+      verificationCode,
+    );
+
     const token = this.generateToken(user);
-    this.mailService.sendWelcomeEmail(user.email, user.name);
     return {
       token,
-      permissions: ['super_admin', 'customer'],
+      permissions: permissionNames,
+      verificationMessage: sent
+        ? 'Verification code sent to your email'
+        : 'Verification code generated (email not configured)',
+    };
+  }
+
+  private issueVerificationCode(email: string): string {
+    const token = crypto.randomInt(100000, 999999).toString();
+    this.verifications = this.verifications.filter((v) => v.email !== email);
+    this.verifications.push({
+      email,
+      token,
+      expiresAt: Date.now() + VERIFY_TTL_MS,
+    });
+    this.saveVerifications();
+    return token;
+  }
+
+  async resendVerificationEmail(email: string): Promise<CoreResponse> {
+    const user = this.users.find((u) => u.email === email);
+    if (!user) {
+      throw new BadRequestException('No account found with this email');
+    }
+    const userAny = user as any;
+    if (userAny.email_verified) {
+      throw new BadRequestException('Email is already verified');
+    }
+
+    const verificationCode = this.issueVerificationCode(email);
+    const sent = await this.mailService.sendEmailVerificationEmail(
+      email,
+      verificationCode,
+    );
+
+    return {
+      success: true,
+      message: sent
+        ? 'Verification code sent to your email'
+        : 'Verification code generated (email not configured)',
+    };
+  }
+
+  async verifyEmail(email: string, code: string): Promise<CoreResponse> {
+    const verification = this.verifications.find(
+      (v) => v.email === email && v.token === code,
+    );
+    if (!verification) {
+      throw new BadRequestException('Invalid or expired verification code');
+    }
+    if (Date.now() > verification.expiresAt) {
+      this.verifications = this.verifications.filter(
+        (v) => v.token !== verification.token,
+      );
+      this.saveVerifications();
+      throw new BadRequestException(
+        'Code has expired. Please request a new one',
+      );
+    }
+
+    const user: any = this.users.find((u: any) => u.email === email);
+    if (!user) {
+      throw new BadRequestException('No account found with this email');
+    }
+
+    user.email_verified = true;
+    user.updated_at = new Date();
+    this.saveUsers();
+
+    this.verifications = this.verifications.filter(
+      (v) => v.token !== verification.token,
+    );
+    this.saveVerifications();
+
+    await this.mailService.sendWelcomeEmail(user.email, user.name);
+
+    return {
+      success: true,
+      message: 'Email verified successfully. You can now use your account.',
     };
   }
 
@@ -321,7 +465,15 @@ export class AuthService {
   me(email?: string): User {
     if (email) {
       const user = this.users.find((u: any) => u.email === email);
-      if (user) return user;
+      if (user) {
+        if ((user as any).email_verified === false) {
+          throw new HttpException(
+            'Email not verified. Please check your inbox for the verification code.',
+            HttpStatus.CONFLICT,
+          );
+        }
+        return user;
+      }
     }
     const admin = this.users.find((u: any) =>
       (u.permissions || []).some(
