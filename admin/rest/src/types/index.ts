@@ -1520,6 +1520,7 @@ export interface RegisterInput {
   password: string;
   name: string;
   shop_id?: number;
+  turnstileToken?: string;
   // permission: Permission;
 }
 

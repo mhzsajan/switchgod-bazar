@@ -2,6 +2,7 @@ import Alert from '@/components/ui/alert';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import PasswordInput from '@/components/ui/password-input';
+import Turnstile from '@/components/ui/turnstile';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -35,7 +36,9 @@ const registrationFormSchema = yup.object().shape({
 });
 const RegistrationForm = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const { mutate: registerUser, isLoading: loading } = useRegisterMutation();
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   const {
     register,
@@ -57,6 +60,7 @@ const RegistrationForm = () => {
         name,
         email,
         password,
+        turnstileToken: turnstileToken || undefined,
         //@ts-ignore
         permission,
       },
@@ -117,7 +121,16 @@ const RegistrationForm = () => {
           variant="outline"
           className="mb-4"
         />
-        <Button className="w-full" loading={loading} disabled={loading}>
+        {turnstileSiteKey && (
+          <div className="mb-4 flex justify-center">
+            <Turnstile siteKey={turnstileSiteKey} onVerify={setTurnstileToken} />
+          </div>
+        )}
+        <Button
+          className="w-full"
+          loading={loading}
+          disabled={loading || (!!turnstileSiteKey && !turnstileToken)}
+        >
           {t('form:text-register')}
         </Button>
 

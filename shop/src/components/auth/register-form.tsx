@@ -3,12 +3,14 @@ import Logo from '@/components/ui/logo';
 import Input from '@/components/ui/forms/input';
 import PasswordInput from '@/components/ui/forms/password-input';
 import Button from '@/components/ui/button';
+import Turnstile from '@/components/ui/turnstile';
 import { useTranslation } from 'next-i18next';
 import { useModalAction } from '@/components/ui/modal/modal.context';
 import { Form } from '@/components/ui/forms/form';
 import type { RegisterUserInput } from '@/types';
 import * as yup from 'yup';
 import { useRegister } from '@/framework/user';
+import { useState } from 'react';
 
 const registerFormSchema = yup.object().shape({
   name: yup.string().required('error-name-required'),
@@ -23,12 +25,15 @@ function RegisterForm() {
   const { t } = useTranslation('common');
   const { openModal } = useModalAction();
   const { mutate, isLoading, formError } = useRegister();
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   function onSubmit({ name, email, password }: RegisterUserInput) {
     mutate({
       name,
       email,
       password,
+      turnstileToken: turnstileToken || undefined,
     });
   }
 
@@ -63,11 +68,19 @@ function RegisterForm() {
               variant="outline"
               className="mb-5"
             />
+            {turnstileSiteKey && (
+              <div className="mb-5 flex justify-center">
+                <Turnstile
+                  siteKey={turnstileSiteKey}
+                  onVerify={setTurnstileToken}
+                />
+              </div>
+            )}
             <div className="mt-8">
               <Button
                 className="h-12 w-full"
                 loading={isLoading}
-                disabled={isLoading}
+                disabled={isLoading || (!!turnstileSiteKey && !turnstileToken)}
               >
                 {t('text-register')}
               </Button>

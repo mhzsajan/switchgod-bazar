@@ -145,6 +145,8 @@ export class AuthService {
   }
 
   async register(createUserInput: RegisterDto): Promise<AuthResponse> {
+    await this.verifyTurnstile(createUserInput.turnstileToken);
+
     const existing = this.users.find(
       (u) => u.email === createUserInput.email,
     );
@@ -212,6 +214,32 @@ export class AuthService {
         ? 'Verification code sent to your email'
         : 'Verification code generated (email not configured)',
     };
+  }
+
+private async verifyTurnstile(token?: string): Promise<void> {
+    const secret = process.env.TURNSTILE_SECRET_KEY;
+    if (!secret) return;
+
+    if (!token) {
+      throw new BadRequestException(
+        'Please complete the security verification',
+      );
+    }
+
+    const res = await fetch(
+      'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret, response: token }),
+      },
+    );
+    const result: any = await res.json();
+    if (!result?.success) {
+      throw new BadRequestException(
+        'Security verification failed. Please try again',
+      );
+    }
   }
 
   private issueVerificationCode(email: string): string {

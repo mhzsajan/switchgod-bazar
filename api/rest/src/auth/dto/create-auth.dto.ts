@@ -10,6 +10,7 @@ enum Permission {
 }
 export class RegisterDto extends PickType(User, ['name', 'email', 'password']) {
   permission: Permission = Permission.CUSTOMER;
+  turnstileToken?: string;
 }
 
 export class LoginDto extends PartialType(
