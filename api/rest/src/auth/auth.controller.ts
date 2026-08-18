@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import {
   ChangePasswordDto,
@@ -64,9 +65,10 @@ export class AuthController {
     return this.authService.verifyForgetPasswordToken(verifyForgetPasswordDto);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('me')
-  me() {
-    return this.authService.me();
+  me(@Req() req: any) {
+    return this.authService.me(req.user?.email);
   }
   @Post('add-points')
   addWalletPoints(@Body() addPointsDto: any) {

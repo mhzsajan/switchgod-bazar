@@ -16,6 +16,8 @@ import { PaymentGateWay } from 'src/payment-method/entities/payment-gateway.enti
 import { PaypalPaymentService } from 'src/payment/paypal-payment.service';
 import { StripePaymentService } from 'src/payment/stripe-payment.service';
 import { Setting } from 'src/settings/entities/setting.entity';
+import * as fs from 'fs';
+import * as path from 'path';
 import {
   CreateOrderStatusDto,
   UpdateOrderStatusDto,
@@ -68,33 +70,47 @@ export class OrdersService {
     private readonly paypalService: PaypalPaymentService,
   ) {}
   async create(createOrderInput: CreateOrderDto): Promise<Order> {
-    const order: Order = this.orders[0];
+    const newId = this.orders.length > 0
+      ? Math.max(...this.orders.map((o) => o.id)) + 1
+      : 1;
     const payment_gateway_type = createOrderInput.payment_gateway
       ? createOrderInput.payment_gateway
       : PaymentGatewayType.CASH_ON_DELIVERY;
-    order.payment_gateway = payment_gateway_type;
-    order.payment_intent = null;
-    // set the order type and payment type
+
+    let orderStatus = OrderStatusType.PENDING;
+    let paymentStatus = PaymentStatusType.PENDING;
 
     switch (payment_gateway_type) {
       case PaymentGatewayType.CASH_ON_DELIVERY:
-        order.order_status = OrderStatusType.PROCESSING;
-        order.payment_status = PaymentStatusType.CASH_ON_DELIVERY;
+        orderStatus = OrderStatusType.PROCESSING;
+        paymentStatus = PaymentStatusType.CASH_ON_DELIVERY;
         break;
       case PaymentGatewayType.CASH:
-        order.order_status = OrderStatusType.PROCESSING;
-        order.payment_status = PaymentStatusType.CASH;
+        orderStatus = OrderStatusType.PROCESSING;
+        paymentStatus = PaymentStatusType.CASH;
         break;
       case PaymentGatewayType.FULL_WALLET_PAYMENT:
-        order.order_status = OrderStatusType.COMPLETED;
-        order.payment_status = PaymentStatusType.WALLET;
-        break;
-      default:
-        order.order_status = OrderStatusType.PENDING;
-        order.payment_status = PaymentStatusType.PENDING;
+        orderStatus = OrderStatusType.COMPLETED;
+        paymentStatus = PaymentStatusType.WALLET;
         break;
     }
-    order.children = this.processChildrenOrder(order);
+
+    const newOrder: Order = {
+      ...createOrderInput,
+      id: newId,
+      tracking_number: String(Date.now()),
+      order_status: orderStatus,
+      payment_status: paymentStatus,
+      payment_gateway: payment_gateway_type,
+      payment_intent: null,
+      children: [],
+      language: createOrderInput.language || 'en',
+      created_at: new Date(),
+      updated_at: new Date(),
+    } as unknown as Order;
+
+    this.orders.push(newOrder);
+
     try {
       if (
         [
@@ -104,15 +120,17 @@ export class OrdersService {
         ].includes(payment_gateway_type)
       ) {
         const paymentIntent = await this.processPaymentIntent(
-          order,
+          newOrder,
           this.setting,
         );
-        order.payment_intent = paymentIntent;
+        newOrder.payment_intent = paymentIntent;
       }
-      return order;
     } catch (error) {
-      return order;
+      // payment intent failed, order still saved
     }
+
+    this.saveToFile();
+    return newOrder;
   }
 
   async getOrders({
@@ -204,11 +222,24 @@ export class OrdersService {
   }
 
   update(id: number, updateOrderInput: UpdateOrderDto) {
-    return this.orders[0];
+    const index = this.orders.findIndex((o) => o.id === Number(id));
+    if (index === -1) return null;
+    const { status, products, ...rest } = updateOrderInput;
+    this.orders[index] = {
+      ...this.orders[index],
+      ...rest,
+      updated_at: new Date(),
+    };
+    this.saveToFile();
+    return this.orders[index];
   }
 
   remove(id: number) {
-    return `This action removes a #${id} order`;
+    const index = this.orders.findIndex((o) => o.id === Number(id));
+    if (index === -1) return null;
+    const removed = this.orders.splice(index, 1)[0];
+    this.saveToFile();
+    return removed;
   }
 
   verifyCheckout(input: CheckoutVerificationDto): VerifiedCheckoutData {
@@ -222,11 +253,34 @@ export class OrdersService {
   }
 
   createOrderStatus(createOrderStatusInput: CreateOrderStatusDto) {
-    return this.orderStatus[0];
+    const newId = this.orderStatus.length > 0
+      ? Math.max(...this.orderStatus.map((s) => s.id)) + 1
+      : 1;
+    const newStatus = {
+      ...createOrderStatusInput,
+      id: newId,
+      created_at: new Date(),
+      updated_at: new Date(),
+    } as unknown as OrderStatus;
+    this.orderStatus.push(newStatus);
+    this.saveOrderStatusFile();
+    return newStatus;
   }
 
   updateOrderStatus(updateOrderStatusInput: UpdateOrderStatusDto) {
+    if (this.orderStatus.length === 0) return null;
+    this.orderStatus[0] = {
+      ...this.orderStatus[0],
+      ...updateOrderStatusInput,
+      updated_at: new Date(),
+    };
+    this.saveOrderStatusFile();
     return this.orderStatus[0];
+  }
+
+  private saveOrderStatusFile() {
+    const filePath = path.join(process.cwd(), 'src', 'db', 'pickbazar', 'order-statuses.json');
+    fs.writeFileSync(filePath, JSON.stringify(this.orderStatus, null, 2));
   }
 
   async getOrderFileItems({ page, limit }: GetOrderFilesDto) {
@@ -253,7 +307,7 @@ export class OrdersService {
   }
 
   async exportOrder(shop_id: string) {
-    return exportOrderJson.url;
+    return (exportOrderJson as any).url;
   }
 
   async downloadInvoiceUrl(shop_id: string) {
@@ -363,33 +417,47 @@ export class OrdersService {
    * @param orderPaymentDto
    */
   async stripePay(order: Order) {
-    this.orders[0]['order_status'] = OrderStatusType.PROCESSING;
-    this.orders[0]['payment_status'] = PaymentStatusType.SUCCESS;
-    this.orders[0]['payment_intent'] = null;
+    const existing = this.orders.find((o) => o.id === order.id);
+    if (!existing) return;
+    existing.order_status = OrderStatusType.PROCESSING;
+    existing.payment_status = PaymentStatusType.SUCCESS;
+    existing.payment_intent = null;
+    existing.updated_at = new Date();
+    this.saveToFile();
   }
 
   async paypalPay(order: Order) {
-    this.orders[0]['order_status'] = OrderStatusType.PROCESSING;
-    this.orders[0]['payment_status'] = PaymentStatusType.SUCCESS;
+    const existing = this.orders.find((o) => o.id === order.id);
+    if (!existing) return;
+    existing.order_status = OrderStatusType.PROCESSING;
+    existing.payment_status = PaymentStatusType.SUCCESS;
     const { status } = await this.paypalService.verifyOrder(
       order.payment_intent.payment_intent_info.payment_id,
     );
-    this.orders[0]['payment_intent'] = null;
+    existing.payment_intent = null;
+    existing.updated_at = new Date();
+    this.saveToFile();
     if (status === 'COMPLETED') {
-      //console.log('payment Success');
+      // payment Success
     }
   }
 
-  /**
-   * This method will set order status and payment status
-   * @param orderStatus
-   * @param paymentStatus
-   */
   changeOrderPaymentStatus(
     orderStatus: OrderStatusType,
     paymentStatus: PaymentStatusType,
   ) {
-    this.orders[0]['order_status'] = orderStatus;
-    this.orders[0]['payment_status'] = paymentStatus;
+    if (this.orders.length === 0) return;
+    this.orders[0].order_status = orderStatus;
+    this.orders[0].payment_status = paymentStatus;
+    this.orders[0].updated_at = new Date();
+    this.saveToFile();
+  }
+
+    private saveToFile() {
+    const srcPath = path.join(process.cwd(), 'src', 'db', 'pickbazar', 'orders.json');
+    const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'orders.json');
+    const data = JSON.stringify(this.orders, null, 2);
+    fs.writeFileSync(srcPath, data);
+    fs.writeFileSync(distPath, data);
   }
 }

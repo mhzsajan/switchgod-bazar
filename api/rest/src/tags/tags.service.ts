@@ -7,6 +7,8 @@ import { Tag } from './entities/tag.entity';
 import tagsJson from '@db/tags.json';
 import { plainToClass } from 'class-transformer';
 import Fuse from 'fuse.js';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const tags = plainToClass(Tag, tagsJson);
 
@@ -21,10 +23,19 @@ export class TagsService {
   private tags: Tag[] = tags;
 
   create(createTagDto: CreateTagDto) {
-    return {
-      id: this.tags.length + 1,
+    const newId = this.tags.length > 0
+      ? Math.max(...this.tags.map((t) => t.id)) + 1
+      : 1;
+    const newTag: Tag = {
       ...createTagDto,
-    };
+      id: newId,
+      slug: createTagDto.name.toLowerCase().replace(/\s+/g, '-') + '-' + newId,
+      created_at: new Date(),
+      updated_at: new Date(),
+    } as unknown as Tag;
+    this.tags.push(newTag);
+    this.saveToFile();
+    return newTag;
   }
 
   findAll({ page, limit, search }: GetTagsDto) {
@@ -63,10 +74,30 @@ export class TagsService {
   }
 
   update(id: number, updateTagDto: UpdateTagDto) {
-    return this.tags[0];
+    const index = this.tags.findIndex((t) => t.id === Number(id));
+    if (index === -1) return null;
+    this.tags[index] = {
+      ...this.tags[index],
+      ...updateTagDto,
+      updated_at: new Date(),
+    };
+    this.saveToFile();
+    return this.tags[index];
   }
 
   remove(id: number) {
-    return `This action removes a #${id} tag`;
+    const index = this.tags.findIndex((t) => t.id === Number(id));
+    if (index === -1) return null;
+    const removed = this.tags.splice(index, 1)[0];
+    this.saveToFile();
+    return removed;
+  }
+
+    private saveToFile() {
+    const srcPath = path.join(process.cwd(), 'src', 'db', 'pickbazar', 'tags.json');
+    const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'tags.json');
+    const data = JSON.stringify(this.tags, null, 2);
+    fs.writeFileSync(srcPath, data);
+    fs.writeFileSync(distPath, data);
   }
 }

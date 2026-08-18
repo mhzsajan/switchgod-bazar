@@ -5,7 +5,7 @@ import becomeSellerJson from '@db/become-seller.json';
 import { CreateBecomeSellerDto } from './dto/create-become-seller.dto';
 import { UpdateBecomeSellerDto } from './dto/update-become-seller.dto';
 
-const becomeSeller = plainToClass(BecomeSeller, becomeSellerJson);
+const becomeSeller = plainToClass(BecomeSeller, becomeSellerJson) as any;
 
 @Injectable()
 export class BecomeSellerService {

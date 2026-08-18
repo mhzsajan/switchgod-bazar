@@ -1,12 +1,11 @@
 # RESUME — Read This First
 
 ## Where We Stopped
-- **Last completed:** Session 45 — Auth security fix complete (Phase 11 done). Demo users removed. Only `mhzsajan@gmail.com` exists.
-- **Current step:** Login requires valid email + bcrypt password. Real JWT tokens. `/me` endpoint protected.
-- **Next action:** TBD — 43 tasks remaining in Phases 1-7, 9 (branding, SEO, security, mobile, navigation, bugs, performance, add-to-cart)
-- **New:** Created `.deploy/EMPLOYEE_MANUAL.md` — beginner-friendly admin manual for employees
-- **Dark mode backup:** Tag `v2.0-dark-mode-full`, branch `backup-dark-mode-full` (pushed to origin)
-- **⚠️ IMPORTANT:** API reads JSON from `dist/db/pickbazar/`, NOT `src/db/pickbazar/`. After editing DB files in `src/`, copy them to `dist/db/` before `pm2 restart api`.
+- **New repo (fresh start, 2026-08-18):** Git history restarted as `mhzsajan/switchgod-bazar` (3 commits). Old repo `mhzsajan/pickbazar` kept on GitHub as reference.
+- **Last completed:** Session 46 — Restored all persistence fixes from old repo (19 services). `create()`/`update()`/`remove()` now save to JSON. Shop creation fixed and verified.
+- **⚠️ IMPORTANT FIX (better than old repo):** `saveToFile()` now writes to BOTH `src/db/pickbazar/` AND `dist/db/pickbazar/`. Old repo only wrote `src/` — data was silently lost on restart. Verify with `grep test-shop api/rest/dist/db/pickbazar/shops.json`.
+- **Auth status:** Real bcrypt+JWT (Session 47). Login: `mhzsajan@gmail.com` / `Pass@123` — the ONLY user (all demo users deleted). Wrong password → 401. `/me` protected by JWT guard.
+- **Old repo docs (PLAN.md etc.) describe the old project** — validate before trusting numbers.
 
 ## What Works Now
 | Service | Port | PM2 | Status | Domain |

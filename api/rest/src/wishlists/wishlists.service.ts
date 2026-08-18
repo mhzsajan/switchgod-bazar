@@ -9,6 +9,8 @@ import { UpdateWishlistDto } from './dto/update-wishlists.dto';
 import wishlistsJSON from '@db/wishlists.json';
 import productsJson from '@db/products.json';
 import { Product } from '../products/entities/product.entity';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const wishlists = plainToClass(Wishlist, wishlistsJSON);
 const products = plainToClass(Product, productsJson);
@@ -51,15 +53,38 @@ export class WishlistsService {
   }
 
   create(createWishlistDto: CreateWishlistDto) {
-    return this.wishlist[0];
+    const newId = this.wishlist.length > 0
+      ? Math.max(...this.wishlist.map((w) => w.id)) + 1
+      : 1;
+    const newWishlist: Wishlist = {
+      ...createWishlistDto,
+      id: newId,
+      created_at: new Date(),
+      updated_at: new Date(),
+    } as unknown as Wishlist;
+    this.wishlist.push(newWishlist);
+    this.saveToFile();
+    return newWishlist;
   }
 
   update(id: number, updateWishlistDto: UpdateWishlistDto) {
-    return this.wishlist[0];
+    const index = this.wishlist.findIndex((w) => w.id === Number(id));
+    if (index === -1) return null;
+    this.wishlist[index] = {
+      ...this.wishlist[index],
+      ...updateWishlistDto,
+      updated_at: new Date(),
+    };
+    this.saveToFile();
+    return this.wishlist[index];
   }
 
   delete(id: number) {
-    return this.wishlist[0];
+    const index = this.wishlist.findIndex((w) => w.id === Number(id));
+    if (index === -1) return null;
+    const removed = this.wishlist.splice(index, 1)[0];
+    this.saveToFile();
+    return removed;
   }
 
   isInWishlist(product_id: number) {
@@ -70,9 +95,23 @@ export class WishlistsService {
 
   toggle({ product_id }: CreateWishlistDto) {
     const product = this.products.find((p) => p.id === Number(product_id));
-
+    if (!product) return null;
     product.in_wishlist = !product?.in_wishlist;
-
+    product.updated_at = new Date();
+    this.saveProductsFile();
     return product.in_wishlist;
+  }
+
+    private saveToFile() {
+    const srcPath = path.join(process.cwd(), 'src', 'db', 'pickbazar', 'wishlists.json');
+    const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'wishlists.json');
+    const data = JSON.stringify(this.wishlist, null, 2);
+    fs.writeFileSync(srcPath, data);
+    fs.writeFileSync(distPath, data);
+  }
+
+  private saveProductsFile() {
+    const filePath = path.join(process.cwd(), 'src', 'db', 'pickbazar', 'products.json');
+    fs.writeFileSync(filePath, JSON.stringify(this.products, null, 2));
   }
 }

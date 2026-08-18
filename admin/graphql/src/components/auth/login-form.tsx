@@ -58,10 +58,10 @@ const LoginForm = () => {
   } = useForm<FormValues>({
     //@ts-ignore
     resolver: yupResolver(loginFormSchema),
-    defaultValues: {
-      email: "admin@demo.com",
-      password: "demodemo",
-    },
+defaultValues: {
+     email: "",
+     password: "",
+   },
   });
   const router = useRouter();
   const { t } = useTranslation();

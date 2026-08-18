@@ -7,6 +7,8 @@ import { Category } from './entities/category.entity';
 import Fuse from 'fuse.js';
 import categoriesJson from '@db/categories.json';
 import { paginate } from 'src/common/pagination/paginate';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const categories = plainToClass(Category, categoriesJson);
 const options = {
@@ -20,7 +22,19 @@ export class CategoriesService {
   private categories: Category[] = categories;
 
   create(createCategoryDto: CreateCategoryDto) {
-    return this.categories[0];
+    const newId = this.categories.length > 0
+      ? Math.max(...this.categories.map((c) => c.id)) + 1
+      : 1;
+    const newCategory: Category = {
+      ...createCategoryDto,
+      id: newId,
+      slug: createCategoryDto.name.toLowerCase().replace(/\s+/g, '-') + '-' + newId,
+      created_at: new Date(),
+      updated_at: new Date(),
+    } as unknown as Category;
+    this.categories.push(newCategory);
+    this.saveToFile();
+    return newCategory;
   }
 
   getCategories({ limit, page, search, parent }: GetCategoriesDto) {
@@ -61,10 +75,30 @@ export class CategoriesService {
   }
 
   update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    return this.categories[0];
+    const index = this.categories.findIndex((c) => c.id === Number(id));
+    if (index === -1) return null;
+    this.categories[index] = {
+      ...this.categories[index],
+      ...updateCategoryDto,
+      updated_at: new Date(),
+    };
+    this.saveToFile();
+    return this.categories[index];
   }
 
   remove(id: number) {
-    return `This action removes a #${id} category`;
+    const index = this.categories.findIndex((c) => c.id === Number(id));
+    if (index === -1) return null;
+    const removed = this.categories.splice(index, 1)[0];
+    this.saveToFile();
+    return removed;
+  }
+
+    private saveToFile() {
+    const srcPath = path.join(process.cwd(), 'src', 'db', 'pickbazar', 'categories.json');
+    const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'categories.json');
+    const data = JSON.stringify(this.categories, null, 2);
+    fs.writeFileSync(srcPath, data);
+    fs.writeFileSync(distPath, data);
   }
 }

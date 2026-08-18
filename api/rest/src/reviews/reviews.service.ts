@@ -7,6 +7,8 @@ import { UpdateReviewDto } from './dto/update-review.dto';
 import { GetReviewsDto, ReviewPaginator } from './dto/get-reviews.dto';
 import reviewJSON from '@db/reviews.json';
 import { Review } from './entities/review.entity';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const reviews = plainToClass(Review, reviewJSON);
 const options = {
@@ -51,14 +53,46 @@ export class ReviewService {
   }
 
   create(createReviewDto: CreateReviewDto) {
-    return this.reviews[0];
+    const newId = this.reviews.length > 0
+      ? Math.max(...this.reviews.map((r) => r.id)) + 1
+      : 1;
+    const newReview: Review = {
+      ...createReviewDto,
+      id: newId,
+      created_at: new Date(),
+      updated_at: new Date(),
+    } as unknown as Review;
+    this.reviews.push(newReview);
+    this.saveToFile();
+    return newReview;
   }
 
   update(id: number, updateReviewDto: UpdateReviewDto) {
-    return this.reviews[0];
+    const index = this.reviews.findIndex((r) => r.id === Number(id));
+    if (index === -1) return null;
+    const { product_id, ...rest } = updateReviewDto as any;
+    this.reviews[index] = {
+      ...this.reviews[index],
+      ...rest,
+      updated_at: new Date(),
+    };
+    this.saveToFile();
+    return this.reviews[index];
   }
 
   delete(id: number) {
-    return this.reviews[0];
+    const index = this.reviews.findIndex((r) => r.id === Number(id));
+    if (index === -1) return null;
+    const removed = this.reviews.splice(index, 1)[0];
+    this.saveToFile();
+    return removed;
+  }
+
+    private saveToFile() {
+    const srcPath = path.join(process.cwd(), 'src', 'db', 'pickbazar', 'reviews.json');
+    const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'reviews.json');
+    const data = JSON.stringify(this.reviews, null, 2);
+    fs.writeFileSync(srcPath, data);
+    fs.writeFileSync(distPath, data);
   }
 }

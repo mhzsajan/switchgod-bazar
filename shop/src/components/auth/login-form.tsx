@@ -55,8 +55,8 @@ function LoginForm() {
         validationSchema={loginFormSchema}
         useFormProps={{
           defaultValues: {
-            email: 'customer@demo.com',
-            password: 'demodemo',
+            email: '',
+            password: '',
           },
         }}
       >

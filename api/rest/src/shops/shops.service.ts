@@ -9,6 +9,8 @@ import Fuse from 'fuse.js';
 import { GetShopsDto } from './dto/get-shops.dto';
 import { paginate } from 'src/common/pagination/paginate';
 import { GetStaffsDto } from './dto/get-staffs.dto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const shops = plainToClass(Shop, shopsJson);
 const nearShops = plainToClass(Shop, nearShopJson);
@@ -24,26 +26,51 @@ export class ShopsService {
   private nearShops: Shop[] = shops;
 
   create(createShopDto: CreateShopDto) {
-    return this.shops[0];
+    const newId = this.shops.length > 0
+      ? Math.max(...this.shops.map((s) => s.id)) + 1
+      : 1;
+    const newShop: Shop = {
+      ...createShopDto,
+      id: newId,
+      slug: createShopDto.name.toLowerCase().replace(/\s+/g, '-'),
+      is_active: false,
+      orders_count: 0,
+      products_count: 0,
+      owner: null,
+      owner_id: 1,
+      created_at: new Date(),
+      updated_at: new Date(),
+    } as Shop;
+    this.shops.push(newShop);
+    this.saveToFile();
+    return newShop;
   }
 
-  getShops({ search, limit, page }: GetShopsDto) {
+  getShops({ search, limit, page, is_active }: GetShopsDto) {
     if (!page) page = 1;
 
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
     let data: Shop[] = this.shops;
+
     if (search) {
       const parseSearchParams = search.split(';');
+      const fuzzyFilters: any[] = [];
       for (const searchParam of parseSearchParams) {
         const [key, value] = searchParam.split(':');
-        // data = data.filter((item) => item[key] === value);
-        data = fuse.search(value)?.map(({ item }) => item);
+        if (key === 'is_active') {
+          data = data.filter((item) => Boolean(item.is_active) === (value === '1'));
+        } else {
+          fuzzyFilters.push({ [key]: value });
+        }
       }
+      if (fuzzyFilters.length) {
+        data = fuse.search({ $and: fuzzyFilters })?.map(({ item }) => item);
+      }
+    } else if (is_active !== undefined) {
+      data = data.filter((item) => Boolean(item.is_active) === is_active);
     }
-    // if (text?.replace(/%/g, '')) {
-    //   data = fuse.search(text)?.map(({ item }) => item);
-    // }
+
     const results = data.slice(startIndex, endIndex);
     const url = `/shops?search=${search}&limit=${limit}`;
 
@@ -64,9 +91,17 @@ export class ShopsService {
 
     if (search) {
       const parseSearchParams = search.split(';');
+      const fuzzyFilters: any[] = [];
       for (const searchParam of parseSearchParams) {
         const [key, value] = searchParam.split(':');
-        data = fuse.search(value)?.map(({ item }) => item);
+        if (key === 'is_active') {
+          data = data.filter((item) => Boolean(item.is_active) === (value === '1'));
+        } else {
+          fuzzyFilters.push({ [key]: value });
+        }
+      }
+      if (fuzzyFilters.length) {
+        data = fuse.search({ $and: fuzzyFilters })?.map(({ item }) => item);
       }
     }
     const results = data.slice(startIndex, endIndex);
@@ -103,28 +138,57 @@ export class ShopsService {
   }
 
   update(id: number, updateShopDto: UpdateShopDto) {
-    return this.shops[0];
+    const index = this.shops.findIndex((s) => s.id === Number(id));
+    if (index === -1) return null;
+    this.shops[index] = {
+      ...this.shops[index],
+      ...updateShopDto,
+      updated_at: new Date(),
+    };
+    this.saveToFile();
+    return this.shops[index];
   }
 
   approve(id: number) {
-    return `This action removes a #${id} shop`;
+    const shop = this.shops.find((s) => s.id === Number(id));
+    if (!shop) return null;
+    shop.is_active = true;
+    shop.updated_at = new Date();
+    this.saveToFile();
+    return shop;
   }
 
   remove(id: number) {
-    return `This action removes a #${id} shop`;
+    const index = this.shops.findIndex((s) => s.id === Number(id));
+    if (index === -1) return null;
+    const removed = this.shops.splice(index, 1)[0];
+    this.saveToFile();
+    return removed;
   }
 
   disapproveShop(id: number) {
     const shop = this.shops.find((s) => s.id === Number(id));
+    if (!shop) return null;
     shop.is_active = false;
-
+    shop.updated_at = new Date();
+    this.saveToFile();
     return shop;
   }
 
   approveShop(id: number) {
     const shop = this.shops.find((s) => s.id === Number(id));
+    if (!shop) return null;
     shop.is_active = true;
-
+    shop.updated_at = new Date();
+    this.saveToFile();
     return shop;
+  }
+
+    private saveToFile() {
+    const srcPath = path.join(process.cwd(), 'src', 'db', 'pickbazar', 'shops.json');
+    const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'shops.json');
+    const data = JSON.stringify(this.shops, null, 2);
+    fs.writeFileSync(srcPath, data);
+    fs.writeFileSync(distPath, data);
   }
 }

@@ -11,6 +11,8 @@ import bestSellingProductsJson from '@db/best-selling-products.json';
 import Fuse from 'fuse.js';
 import { GetPopularProductsDto } from './dto/get-popular-products.dto';
 import { GetBestSellingProductsDto } from './dto/get-best-selling-products.dto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const products = plainToClass(Product, productsJson);
 const popularProducts = plainToClass(Product, popularProductsJson);
@@ -39,7 +41,26 @@ export class ProductsService {
   private bestSellingProducts: any = bestSellingProducts;
 
   create(createProductDto: CreateProductDto) {
-    return this.products[0];
+    const newId = this.products.length > 0
+      ? Math.max(...this.products.map((p) => p.id)) + 1
+      : 1;
+    const newProduct: Product = {
+      ...createProductDto,
+      id: newId,
+      slug: createProductDto.name.toLowerCase().replace(/\s+/g, '-') + '-' + newId,
+      product_type: createProductDto.product_type || 'simple',
+      status: createProductDto.status || 'draft',
+      in_stock: createProductDto.in_stock ?? true,
+      is_taxable: createProductDto.is_taxable ?? false,
+      ratings: 0,
+      in_wishlist: false,
+      language: 'en',
+      created_at: new Date(),
+      updated_at: new Date(),
+    } as unknown as Product;
+    this.products.push(newProduct);
+    this.saveToFile();
+    return newProduct;
   }
 
   getProducts({ limit, page, search }: GetProductsDto): ProductPaginator {
@@ -62,16 +83,16 @@ export class ProductsService {
         fuzzyFilters.push({ [key]: value });
       }
     }
-    if (exactFilters.shop_id) {
-      data = data.filter((product) => product.shop.id === exactFilters.shop_id);
-    }
-
     if (fuzzyFilters.length) {
       data = fuse
         .search({
           $and: fuzzyFilters,
         })
         ?.map(({ item }) => item);
+    }
+
+    if (exactFilters.shop_id) {
+      data = data.filter((product) => product.shop.id === exactFilters.shop_id);
     }
 
     const results = data.slice(startIndex, endIndex);
@@ -184,10 +205,30 @@ export class ProductsService {
   }
 
   update(id: number, updateProductDto: UpdateProductDto) {
-    return this.products[0];
+    const index = this.products.findIndex((p) => p.id === Number(id));
+    if (index === -1) return null;
+    this.products[index] = {
+      ...this.products[index],
+      ...updateProductDto,
+      updated_at: new Date(),
+    };
+    this.saveToFile();
+    return this.products[index];
   }
 
   remove(id: number) {
-    return `This action removes a #${id} product`;
+    const index = this.products.findIndex((p) => p.id === Number(id));
+    if (index === -1) return null;
+    const removed = this.products.splice(index, 1)[0];
+    this.saveToFile();
+    return removed;
+  }
+
+    private saveToFile() {
+    const srcPath = path.join(process.cwd(), 'src', 'db', 'pickbazar', 'products.json');
+    const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'products.json');
+    const data = JSON.stringify(this.products, null, 2);
+    fs.writeFileSync(srcPath, data);
+    fs.writeFileSync(distPath, data);
   }
 }

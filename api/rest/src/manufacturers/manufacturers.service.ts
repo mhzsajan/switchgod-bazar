@@ -11,6 +11,8 @@ import {
 import { paginate } from '../common/pagination/paginate';
 import { CreateManufacturerDto } from './dto/create-manufacturer.dto';
 import { UpdateManufacturerDto } from './dto/update-manufacturer.dto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const manufacturers = plainToClass(Manufacturer, manufacturersJson);
 
@@ -26,7 +28,19 @@ export class ManufacturersService {
   private manufacturers: Manufacturer[] = manufacturers;
 
   create(createManufactureDto: CreateManufacturerDto) {
-    return this.manufacturers[0];
+    const newId = this.manufacturers.length > 0
+      ? Math.max(...this.manufacturers.map((m) => m.id)) + 1
+      : 1;
+    const newManufacturer: Manufacturer = {
+      ...createManufactureDto,
+      id: newId,
+      slug: (createManufactureDto as any).slug || 'manufacturer-' + newId,
+      created_at: new Date(),
+      updated_at: new Date(),
+    } as unknown as Manufacturer;
+    this.manufacturers.push(newManufacturer);
+    this.saveToFile();
+    return newManufacturer;
   }
 
   async getManufactures({
@@ -69,15 +83,30 @@ export class ManufacturersService {
   }
 
   update(id: number, updateManufacturesDto: UpdateManufacturerDto) {
-    const manufacturer = this.manufacturers.find((p) => p.id === Number(id));
-
-    // Update author
-    manufacturer.is_approved = updateManufacturesDto.is_approved ?? true;
-
-    return manufacturer;
+    const index = this.manufacturers.findIndex((m) => m.id === Number(id));
+    if (index === -1) return null;
+    this.manufacturers[index] = {
+      ...this.manufacturers[index],
+      ...updateManufacturesDto,
+      updated_at: new Date(),
+    };
+    this.saveToFile();
+    return this.manufacturers[index];
   }
 
   remove(id: number) {
-    return `This action removes a #${id} product`;
+    const index = this.manufacturers.findIndex((m) => m.id === Number(id));
+    if (index === -1) return null;
+    const removed = this.manufacturers.splice(index, 1)[0];
+    this.saveToFile();
+    return removed;
+  }
+
+    private saveToFile() {
+    const srcPath = path.join(process.cwd(), 'src', 'db', 'pickbazar', 'manufacturers.json');
+    const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'manufacturers.json');
+    const data = JSON.stringify(this.manufacturers, null, 2);
+    fs.writeFileSync(srcPath, data);
+    fs.writeFileSync(distPath, data);
   }
 }

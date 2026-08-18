@@ -7,6 +7,8 @@ import { Type } from './entities/type.entity';
 import typesJson from '@db/types.json';
 import Fuse from 'fuse.js';
 import { GetTypesDto } from './dto/get-types.dto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const types = plainToClass(Type, typesJson);
 const options = {
@@ -53,7 +55,19 @@ export class TypesService {
   }
 
   create(createTypeDto: CreateTypeDto) {
-    return this.types[0];
+    const newId = this.types.length > 0
+      ? Math.max(...this.types.map((t) => t.id)) + 1
+      : 1;
+    const newType: Type = {
+      ...createTypeDto,
+      id: newId,
+      slug: 'type-' + newId,
+      created_at: new Date(),
+      updated_at: new Date(),
+    } as unknown as Type;
+    this.types.push(newType);
+    this.saveToFile();
+    return newType;
   }
 
   findAll() {
@@ -65,10 +79,30 @@ export class TypesService {
   }
 
   update(id: number, updateTypeDto: UpdateTypeDto) {
-    return this.types[0];
+    const index = this.types.findIndex((t) => t.id === Number(id));
+    if (index === -1) return null;
+    this.types[index] = {
+      ...this.types[index],
+      ...updateTypeDto,
+      updated_at: new Date(),
+    };
+    this.saveToFile();
+    return this.types[index];
   }
 
   remove(id: number) {
-    return `This action removes a #${id} type`;
+    const index = this.types.findIndex((t) => t.id === Number(id));
+    if (index === -1) return null;
+    const removed = this.types.splice(index, 1)[0];
+    this.saveToFile();
+    return removed;
+  }
+
+    private saveToFile() {
+    const srcPath = path.join(process.cwd(), 'src', 'db', 'pickbazar', 'types.json');
+    const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'types.json');
+    const data = JSON.stringify(this.types, null, 2);
+    fs.writeFileSync(srcPath, data);
+    fs.writeFileSync(distPath, data);
   }
 }

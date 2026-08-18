@@ -35,8 +35,8 @@
       "socials": []
     },
     "notifications": null,
-    "created_at": "2023-10-02T17:42:55.000000Z",
-    "updated_at": "2023-10-19T07:02:38.000000Z",
+    "created_at": "2023-10-02T17:42:55.000Z",
+    "updated_at": "2023-10-19T07:02:38.000Z",
     "orders_count": 3,
     "products_count": 26,
     "owner": {
@@ -102,8 +102,8 @@
       "socials": []
     },
     "notifications": null,
-    "created_at": "2023-10-02T08:38:16.000000Z",
-    "updated_at": "2023-10-19T06:54:37.000000Z",
+    "created_at": "2023-10-02T08:38:16.000Z",
+    "updated_at": "2023-10-19T06:54:37.000Z",
     "orders_count": 0,
     "products_count": 44,
     "owner": {
@@ -167,8 +167,8 @@
       "socials": []
     },
     "notifications": null,
-    "created_at": "2021-12-07T16:47:07.000000Z",
-    "updated_at": "2023-10-25T03:30:21.000000Z",
+    "created_at": "2021-12-07T16:47:07.000Z",
+    "updated_at": "2023-10-25T03:30:21.000Z",
     "orders_count": 6,
     "products_count": 67,
     "owner": {
@@ -252,8 +252,8 @@
       }
     },
     "notifications": null,
-    "created_at": "2021-06-27T03:48:23.000000Z",
-    "updated_at": "2023-10-19T07:05:23.000000Z",
+    "created_at": "2021-06-27T03:48:23.000Z",
+    "updated_at": "2023-10-19T07:05:23.000Z",
     "orders_count": 4,
     "products_count": 584,
     "owner": {
@@ -330,8 +330,8 @@
       }
     },
     "notifications": null,
-    "created_at": "2021-06-27T03:48:11.000000Z",
-    "updated_at": "2023-10-12T04:44:06.000000Z",
+    "created_at": "2021-06-27T03:48:11.000Z",
+    "updated_at": "2023-10-12T04:44:06.000Z",
     "orders_count": 0,
     "products_count": 72,
     "owner": {
@@ -410,8 +410,8 @@
       }
     },
     "notifications": null,
-    "created_at": "2021-06-27T03:47:49.000000Z",
-    "updated_at": "2023-10-19T07:04:43.000000Z",
+    "created_at": "2021-06-27T03:47:49.000Z",
+    "updated_at": "2023-10-19T07:04:43.000Z",
     "orders_count": 2,
     "products_count": 81,
     "owner": {
@@ -492,8 +492,8 @@
       }
     },
     "notifications": null,
-    "created_at": "2021-06-27T03:47:23.000000Z",
-    "updated_at": "2023-10-19T06:52:14.000000Z",
+    "created_at": "2021-06-27T03:47:23.000Z",
+    "updated_at": "2023-10-19T06:52:14.000Z",
     "orders_count": 2,
     "products_count": 15,
     "owner": {
@@ -569,8 +569,8 @@
       }
     },
     "notifications": null,
-    "created_at": "2021-06-27T03:47:10.000000Z",
-    "updated_at": "2023-10-19T06:51:41.000000Z",
+    "created_at": "2021-06-27T03:47:10.000Z",
+    "updated_at": "2023-10-19T06:51:41.000Z",
     "orders_count": 0,
     "products_count": 64,
     "owner": {
@@ -603,8 +603,8 @@
   {
     "id": 1,
     "owner_id": 1,
-    "name": "Furniture Shop",
-    "slug": "furniture-shop",
+    "name": "Test Shop 2",
+    "slug": "test-shop2",
     "description": "The furniture shop is the best shop around the city. This is being run under the store owner and our aim is to provide quality product and hassle free customer service.",
     "cover_image": {
       "id": "885",
@@ -618,33 +618,27 @@
     },
     "is_active": 1,
     "address": {
+      "country": "Nepal",
+      "city": "Kathmadu",
+      "state": "Bagmati",
       "zip": "08753",
-      "city": "East Dover",
-      "state": "New Jersey",
-      "country": "USA",
       "street_address": "588  Finwood Road"
     },
     "settings": {
-      "contact": "21342121221",
+      "notifications": {},
+      "contact": "9779840321244",
+      "website": "switchgod.com.np",
       "socials": [
         {
-          "url": "https://www.instagram.com/",
-          "icon": "InstagramIcon"
+          "icon": "InstagramIcon",
+          "url": "https://www.instagram.com/"
         }
       ],
-      "website": "https://redq.io/",
-      "location": {
-        "lat": 40.757272,
-        "lng": -74.089508,
-        "city": "Kearny",
-        "state": "NJ",
-        "country": "United States",
-        "formattedAddress": "New Jersey Turnpike, Kearny, NJ, USA"
-      }
+      "location": {}
     },
     "notifications": null,
-    "created_at": "2021-06-27T03:46:14.000000Z",
-    "updated_at": "2023-10-12T04:40:13.000000Z",
+    "created_at": "2021-06-27T03:46:14.000Z",
+    "updated_at": "2026-08-18T12:37:53.676Z",
     "orders_count": 2,
     "products_count": 55,
     "owner": {
@@ -672,6 +666,86 @@
         "created_at": "2021-06-30T11:20:29.000000Z",
         "updated_at": "2021-06-30T14:13:53.000000Z"
       }
+    },
+    "balance": {
+      "payment_info": {
+        "account": 435678309,
+        "bank": "fdughoifu",
+        "name": "Sajan Maharjan",
+        "email": "mhzsajan@gmail.com"
+      }
     }
+  },
+  {
+    "settings": {
+      "notifications": {},
+      "contact": "9779840321244",
+      "website": "switchgod.com.np",
+      "socials": [],
+      "location": {}
+    },
+    "balance": {
+      "payment_info": {
+        "name": "Sajan Maharjan",
+        "email": "mhzsajan@gmail.com",
+        "bank": "sdfgsdhjfhi",
+        "account": 43335678
+      }
+    },
+    "name": "Gaming Shop",
+    "description": "",
+    "address": {
+      "country": "Nepal ",
+      "city": "Kathmadu",
+      "state": "Bagmati",
+      "zip": "",
+      "street_address": ""
+    },
+    "id": 12,
+    "slug": "gaming-shop",
+    "is_active": true,
+    "orders_count": 0,
+    "products_count": 0,
+    "owner": null,
+    "owner_id": 1,
+    "created_at": "2026-08-18T12:34:47.209Z",
+    "updated_at": "2026-08-18T12:52:21.121Z",
+    "logo": null,
+    "cover_image": null
+  },
+  {
+    "settings": {
+      "notifications": {},
+      "contact": "9779860172118",
+      "website": "switchgod.com.np",
+      "socials": [],
+      "location": {}
+    },
+    "balance": {
+      "payment_info": {
+        "account": 123455,
+        "bank": "asd wdsdaw",
+        "name": "sajan",
+        "email": "mhzsajan@gmail.com"
+      }
+    },
+    "name": "sdasdasd  dsda",
+    "description": "",
+    "address": {
+      "country": "Nepal",
+      "city": "ललितपुर",
+      "state": "",
+      "zip": "44700",
+      "street_address": "J8HH+FG8\nDhapakhel Rd"
+    },
+    "id": 13,
+    "slug": "sdasdasd-dsda",
+    "is_active": false,
+    "orders_count": 0,
+    "products_count": 0,
+    "owner": null,
+    "owner_id": 1,
+    "created_at": "2026-08-18T12:38:19.953Z",
+    "updated_at": "2026-08-18T12:38:19.953Z"
   }
 ]

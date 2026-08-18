@@ -7,6 +7,8 @@ import Fuse from 'fuse.js';
 import { paginate } from 'src/common/pagination/paginate';
 import { CreateStoreNoticeDto } from './dto/create-store-notice.dto';
 import { UpdateStoreNoticeDto } from './dto/update-store-notice.dto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const storeNotices = plainToClass(StoreNotice, storeNoticesJson);
 const options = {
@@ -20,7 +22,18 @@ export class StoreNoticesService {
   private storeNotices: StoreNotice[] = storeNotices;
 
   create(createStoreNoticeDto: CreateStoreNoticeDto) {
-    return this.storeNotices[0];
+    const newId = this.storeNotices.length > 0
+      ? Math.max(...this.storeNotices.map((n) => n.id)) + 1
+      : 1;
+    const newNotice: StoreNotice = {
+      ...createStoreNoticeDto,
+      id: newId,
+      created_at: new Date(),
+      updated_at: new Date(),
+    } as unknown as StoreNotice;
+    this.storeNotices.push(newNotice);
+    this.saveToFile();
+    return newNotice;
   }
 
   getStoreNotices({ search, limit, page }: GetStoreNoticesDto) {
@@ -63,10 +76,30 @@ export class StoreNoticesService {
   }
 
   update(id: number, updateStoreNoticeDto: UpdateStoreNoticeDto) {
-    return this.storeNotices[0];
+    const index = this.storeNotices.findIndex((n) => n.id === Number(id));
+    if (index === -1) return null;
+    this.storeNotices[index] = {
+      ...this.storeNotices[index],
+      ...updateStoreNoticeDto,
+      updated_at: new Date(),
+    };
+    this.saveToFile();
+    return this.storeNotices[index];
   }
 
   remove(id: number) {
-    return `This action removes a #${id} store notice`;
+    const index = this.storeNotices.findIndex((n) => n.id === Number(id));
+    if (index === -1) return null;
+    const removed = this.storeNotices.splice(index, 1)[0];
+    this.saveToFile();
+    return removed;
+  }
+
+    private saveToFile() {
+    const srcPath = path.join(process.cwd(), 'src', 'db', 'pickbazar', 'store-notices.json');
+    const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'store-notices.json');
+    const data = JSON.stringify(this.storeNotices, null, 2);
+    fs.writeFileSync(srcPath, data);
+    fs.writeFileSync(distPath, data);
   }
 }

@@ -9,6 +9,8 @@ import { GetFlashSaleDto } from './dto/get-flash-sales.dto';
 import { CreateFlashSaleDto } from './dto/create-flash-sale.dto';
 import { UpdateFlashSaleDto } from './dto/update-flash-sale.dto';
 import { Product } from 'src/products/entities/product.entity';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const flashSale = plainToClass(FlashSale, flashSaleJSON);
 const options = {
@@ -33,7 +35,19 @@ export class FlashSaleService {
   private productsByFlashSale: Product[] = productsByFlashSale;
 
   create(createFlashSaleDto: CreateFlashSaleDto) {
-    return this.flashSale[0];
+    const newId = this.flashSale.length > 0
+      ? Math.max(...this.flashSale.map((f) => f.id)) + 1
+      : 1;
+    const newFlashSale: FlashSale = {
+      ...createFlashSaleDto,
+      id: newId,
+      slug: (createFlashSaleDto as any).slug || 'flash-sale-' + newId,
+      created_at: new Date(),
+      updated_at: new Date(),
+    } as unknown as FlashSale;
+    this.flashSale.push(newFlashSale);
+    this.saveToFile();
+    return newFlashSale;
   }
 
   findAllFlashSale({ search, limit, page }: GetFlashSaleDto) {
@@ -64,11 +78,31 @@ export class FlashSaleService {
   }
 
   update(id: number, updateFlashSaleDto: UpdateFlashSaleDto) {
-    return this.flashSale[0];
+    const index = this.flashSale.findIndex((f) => f.id === Number(id));
+    if (index === -1) return null;
+    this.flashSale[index] = {
+      ...this.flashSale[index],
+      ...updateFlashSaleDto,
+      updated_at: new Date(),
+    };
+    this.saveToFile();
+    return this.flashSale[index];
   }
 
   remove(id: number) {
-    return `This action removes a #${id} Flash Sale`;
+    const index = this.flashSale.findIndex((f) => f.id === Number(id));
+    if (index === -1) return null;
+    const removed = this.flashSale.splice(index, 1)[0];
+    this.saveToFile();
+    return removed;
+  }
+
+    private saveToFile() {
+    const srcPath = path.join(process.cwd(), 'src', 'db', 'pickbazar', 'flash-sale.json');
+    const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'flash-sale.json');
+    const data = JSON.stringify(this.flashSale, null, 2);
+    fs.writeFileSync(srcPath, data);
+    fs.writeFileSync(distPath, data);
   }
 
   findAllProductsByFlashSale({ search, limit, page }: GetFlashSaleDto) {

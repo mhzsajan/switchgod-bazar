@@ -7,6 +7,8 @@ import couponsJson from '@db/coupons.json';
 import Fuse from 'fuse.js';
 import { GetCouponsDto } from './dto/get-coupons.dto';
 import { paginate } from 'src/common/pagination/paginate';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const coupons = plainToClass(Coupon, couponsJson);
 const options = {
@@ -20,7 +22,21 @@ export class CouponsService {
   private coupons: Coupon[] = coupons;
 
   create(createCouponDto: CreateCouponDto) {
-    return this.coupons[0];
+    const newId = this.coupons.length > 0
+      ? Math.max(...this.coupons.map((c) => c.id)) + 1
+      : 1;
+    const newCoupon: Coupon = {
+      ...createCouponDto,
+      id: newId,
+      is_valid: true,
+      is_approve: false,
+      language: createCouponDto.language || 'en',
+      created_at: new Date(),
+      updated_at: new Date(),
+    } as Coupon;
+    this.coupons.push(newCoupon);
+    this.saveToFile();
+    return newCoupon;
   }
 
   getCoupons({ search, limit, page, shop_id }: GetCouponsDto) {
@@ -34,7 +50,7 @@ export class CouponsService {
     // }
 
     if (shop_id) {
-      data = this.coupons.filter((p) => p.shop_id === Number(shop_id));
+      data = data.filter((p) => p.shop_id === Number(shop_id));
     }
 
     if (search) {
@@ -70,11 +86,23 @@ export class CouponsService {
   }
 
   update(id: number, updateCouponDto: UpdateCouponDto) {
-    return this.coupons[0];
+    const index = this.coupons.findIndex((c) => c.id === Number(id));
+    if (index === -1) return null;
+    this.coupons[index] = {
+      ...this.coupons[index],
+      ...updateCouponDto,
+      updated_at: new Date(),
+    };
+    this.saveToFile();
+    return this.coupons[index];
   }
 
   remove(id: number) {
-    return `This action removes a #${id} coupon`;
+    const index = this.coupons.findIndex((c) => c.id === Number(id));
+    if (index === -1) return null;
+    const removed = this.coupons.splice(index, 1)[0];
+    this.saveToFile();
+    return removed;
   }
 
   verifyCoupon(code: string) {
@@ -104,13 +132,27 @@ export class CouponsService {
   }
   approveCoupon(id: number) {
     const coupon = this.coupons.find((s) => s.id === Number(id));
+    if (!coupon) return null;
     coupon.is_approve = true;
+    coupon.updated_at = new Date();
+    this.saveToFile();
     return coupon;
   }
 
   disapproveCoupon(id: number) {
     const coupon = this.coupons.find((s) => s.id === Number(id));
+    if (!coupon) return null;
     coupon.is_approve = false;
+    coupon.updated_at = new Date();
+    this.saveToFile();
     return coupon;
+  }
+
+    private saveToFile() {
+    const srcPath = path.join(process.cwd(), 'src', 'db', 'pickbazar', 'coupons.json');
+    const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'coupons.json');
+    const data = JSON.stringify(this.coupons, null, 2);
+    fs.writeFileSync(srcPath, data);
+    fs.writeFileSync(distPath, data);
   }
 }
