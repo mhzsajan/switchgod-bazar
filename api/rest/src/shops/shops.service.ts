@@ -9,6 +9,7 @@ import Fuse from 'fuse.js';
 import { GetShopsDto } from './dto/get-shops.dto';
 import { paginate } from 'src/common/pagination/paginate';
 import { GetStaffsDto } from './dto/get-staffs.dto';
+import { MailService } from 'src/mail/mail.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -24,6 +25,12 @@ const fuse = new Fuse(shops, options);
 export class ShopsService {
   private shops: Shop[] = shops;
   private nearShops: Shop[] = shops;
+
+  constructor(private mailService: MailService) {}
+
+  private adminEmail(): string {
+    return process.env.ADMIN_EMAIL || 'mhzsajan@gmail.com';
+  }
 
   create(createShopDto: CreateShopDto) {
     const newId = this.shops.length > 0
@@ -43,6 +50,11 @@ export class ShopsService {
     } as Shop;
     this.shops.push(newShop);
     this.saveToFile();
+    this.mailService.sendShopCreatedEmail(
+      this.adminEmail(),
+      newShop.name,
+      false,
+    );
     return newShop;
   }
 
@@ -181,6 +193,13 @@ export class ShopsService {
     shop.is_active = true;
     shop.updated_at = new Date();
     this.saveToFile();
+    const ownerEmail =
+      (shop as any).owner?.email || (shop as any).settings?.notifications?.email;
+    this.mailService.sendShopCreatedEmail(
+      ownerEmail || this.adminEmail(),
+      shop.name,
+      true,
+    );
     return shop;
   }
 

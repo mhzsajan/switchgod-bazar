@@ -15,6 +15,7 @@ import { PaymentIntent } from 'src/payment-intent/entries/payment-intent.entity'
 import { PaymentGateWay } from 'src/payment-method/entities/payment-gateway.entity';
 import { PaypalPaymentService } from 'src/payment/paypal-payment.service';
 import { StripePaymentService } from 'src/payment/stripe-payment.service';
+import { MailService } from 'src/mail/mail.service';
 import { Setting } from 'src/settings/entities/setting.entity';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -68,7 +69,13 @@ export class OrdersService {
     private readonly authService: AuthService,
     private readonly stripeService: StripePaymentService,
     private readonly paypalService: PaypalPaymentService,
+    private readonly mailService: MailService,
   ) {}
+
+  private adminEmail(): string {
+    return process.env.ADMIN_EMAIL || 'mhzsajan@gmail.com';
+  }
+
   async create(createOrderInput: CreateOrderDto): Promise<Order> {
     const newId = this.orders.length > 0
       ? Math.max(...this.orders.map((o) => o.id)) + 1
@@ -130,6 +137,26 @@ export class OrdersService {
     }
 
     this.saveToFile();
+
+    const customerEmail =
+      (newOrder as any).customer?.email ||
+      (newOrder as any).customer_email ||
+      (newOrder as any).customer_contact;
+    if (customerEmail) {
+      this.mailService.sendOrderEmail(
+        customerEmail,
+        String(newOrder.tracking_number || newOrder.id),
+        newOrder.paid_total ?? newOrder.amount ?? newOrder.total,
+        `Order Confirmation #${newOrder.tracking_number || newOrder.id}`,
+      );
+    }
+    this.mailService.sendOrderEmail(
+      this.adminEmail(),
+      String(newOrder.tracking_number || newOrder.id),
+      newOrder.paid_total ?? newOrder.amount ?? newOrder.total,
+      `New Order #${newOrder.tracking_number || newOrder.id} — ${customerEmail || 'Unknown customer'}`,
+    );
+
     return newOrder;
   }
 

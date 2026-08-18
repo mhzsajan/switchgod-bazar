@@ -36,6 +36,7 @@
     "class-validator": "^0.13.2",
     "fuse.js": "^6.6.2",
     "nestjs-stripe": "^1.0.0",
+    "nodemailer": "^9.0.5",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "paypal-rest-sdk": "^1.8.1",

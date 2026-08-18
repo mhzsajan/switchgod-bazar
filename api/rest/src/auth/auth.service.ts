@@ -1,6 +1,7 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { MailService } from 'src/mail/mail.service';
 import {
   AuthResponse,
   ChangePasswordDto,
@@ -21,14 +22,40 @@ import { User } from 'src/users/entities/user.entity';
 import usersJson from '@db/users.json';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as crypto from 'crypto';
 
 const users = plainToClass(User, usersJson);
+
+interface PasswordReset {
+  email: string;
+  token: string;
+  expiresAt: number;
+}
+
+const RESET_TTL_MS = 30 * 60 * 1000;
+
+function resetsFile(): string {
+  return path.join(process.cwd(), 'src', 'db', 'pickbazar', 'password-resets.json');
+}
+
+function loadResets(): PasswordReset[] {
+  try {
+    if (!fs.existsSync(resetsFile())) return [];
+    return JSON.parse(fs.readFileSync(resetsFile(), 'utf8'));
+  } catch {
+    return [];
+  }
+}
 
 @Injectable()
 export class AuthService {
   private users: User[] = users;
+  private resets: PasswordReset[] = loadResets();
 
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private mailService: MailService,
+  ) {}
 
   private generateToken(user: User): string {
     return this.jwtService.sign({
@@ -37,11 +64,32 @@ export class AuthService {
     });
   }
 
+  private saveResets() {
+    const data = JSON.stringify(this.resets, null, 2);
+    fs.writeFileSync(resetsFile(), data);
+    const distFile = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'password-resets.json');
+    fs.mkdirSync(path.dirname(distFile), { recursive: true });
+    fs.writeFileSync(distFile, data);
+  }
+
+  private saveUsers() {
+    const data = JSON.stringify(this.users, null, 2);
+    fs.writeFileSync(path.join(process.cwd(), 'src', 'db', 'pickbazar', 'users.json'), data);
+    fs.writeFileSync(path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'users.json'), data);
+  }
+
   findById(id: number): User | undefined {
     return this.users.find((u) => u.id === Number(id));
   }
 
   async register(createUserInput: RegisterDto): Promise<AuthResponse> {
+    const existing = this.users.find(
+      (u) => u.email === createUserInput.email,
+    );
+    if (existing) {
+      throw new BadRequestException('Account with this email already exists');
+    }
+
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(createUserInput.password, salt);
 
@@ -79,9 +127,10 @@ export class AuthService {
     };
 
     this.users.push(user);
-    this.saveToFile();
+    this.saveUsers();
 
     const token = this.generateToken(user);
+    this.mailService.sendWelcomeEmail(user.email, user.name);
     return {
       token,
       permissions: ['super_admin', 'customer'],
@@ -138,7 +187,7 @@ export class AuthService {
     }
     user.password = bcrypt.hashSync(newPassword, bcrypt.genSaltSync(10));
     user.updated_at = new Date();
-    this.saveToFile();
+    this.saveUsers();
     return {
       success: true,
       message: 'Password change successful',
@@ -148,30 +197,89 @@ export class AuthService {
   async forgetPassword(
     forgetPasswordInput: ForgetPasswordDto,
   ): Promise<CoreResponse> {
-    console.log(forgetPasswordInput);
+    const user = this.users.find((u) => u.email === forgetPasswordInput.email);
+    if (!user) {
+      throw new BadRequestException('No account found with this email');
+    }
+
+    const token = crypto.randomInt(100000, 999999).toString();
+    this.resets = this.resets.filter((r) => r.email !== user.email);
+    this.resets.push({
+      email: user.email,
+      token,
+      expiresAt: Date.now() + RESET_TTL_MS,
+    });
+    this.saveResets();
+
+    const sent = await this.mailService.sendPasswordResetEmail(
+      user.email,
+      token,
+    );
+
     return {
       success: true,
-      message: 'Password reset email sent',
+      message: sent
+        ? 'Password reset code sent to your email'
+        : 'Password reset code generated (email not configured)',
     };
   }
 
   async verifyForgetPasswordToken(
     verifyForgetPasswordTokenInput: VerifyForgetPasswordDto,
   ): Promise<CoreResponse> {
-    console.log(verifyForgetPasswordTokenInput);
+    const reset = this.resets.find(
+      (r) =>
+        r.email === verifyForgetPasswordTokenInput.email &&
+        r.token === verifyForgetPasswordTokenInput.token,
+    );
+    if (!reset) {
+      throw new BadRequestException('Invalid or expired code');
+    }
+    if (Date.now() > reset.expiresAt) {
+      this.resets = this.resets.filter((r) => r.token !== reset.token);
+      this.saveResets();
+      throw new BadRequestException('Code has expired. Please request a new one');
+    }
     return {
       success: true,
-      message: 'Token verified',
+      message: 'Code verified',
     };
   }
 
   async resetPassword(
     resetPasswordInput: ResetPasswordDto,
   ): Promise<CoreResponse> {
-    console.log(resetPasswordInput);
+    const reset = this.resets.find(
+      (r) =>
+        r.email === resetPasswordInput.email &&
+        r.token === resetPasswordInput.token,
+    );
+    if (!reset) {
+      throw new BadRequestException('Invalid or expired code');
+    }
+    if (Date.now() > reset.expiresAt) {
+      this.resets = this.resets.filter((r) => r.token !== reset.token);
+      this.saveResets();
+      throw new BadRequestException('Code has expired. Please request a new one');
+    }
+
+    const user: any = this.users.find((u: any) => u.email === reset.email);
+    if (!user) {
+      throw new BadRequestException('No account found with this email');
+    }
+    user.password = bcrypt.hashSync(
+      resetPasswordInput.password,
+      bcrypt.genSaltSync(10),
+    );
+    user.updated_at = new Date();
+    this.saveUsers();
+
+    this.resets = this.resets.filter((r) => r.token !== reset.token);
+    this.saveResets();
+
     return {
       success: true,
-      message: 'Password reset successful',
+      message: 'Password reset successful. You can now log in',
     };
   }
 
@@ -224,10 +332,6 @@ export class AuthService {
   }
 
   private saveToFile() {
-    const srcPath = path.join(process.cwd(), 'src', 'db', 'pickbazar', 'users.json');
-    const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'users.json');
-    const data = JSON.stringify(this.users, null, 2);
-    fs.writeFileSync(srcPath, data);
-    fs.writeFileSync(distPath, data);
+    this.saveUsers();
   }
 }
