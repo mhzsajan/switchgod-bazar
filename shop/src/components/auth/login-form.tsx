@@ -16,6 +16,8 @@ import { AnonymousIcon } from '@/components/icons/anonymous-icon';
 import { useRouter } from 'next/router';
 import { Routes } from '@/config/routes';
 import { useSettings } from '@/framework/settings';
+import Turnstile from '@/components/ui/turnstile';
+import { useState } from 'react';
 
 const loginFormSchema = yup.object().shape({
   email: yup
@@ -31,6 +33,8 @@ function LoginForm() {
   const { settings, isLoading: settingLoading } = useSettings();
   const isCheckout = router.pathname.includes('checkout');
   const { mutate: login, isLoading, serverError, setServerError } = useLogin();
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   const guestCheckout = settings?.guestCheckout;
 
@@ -38,6 +42,7 @@ function LoginForm() {
     login({
       email,
       password,
+      turnstileToken: turnstileToken || undefined,
     });
   }
 
@@ -78,11 +83,19 @@ function LoginForm() {
               className="mb-5"
               forgotPageRouteOnClick={() => openModal('FORGOT_VIEW')}
             />
+            {turnstileSiteKey && (
+              <div className="mb-5 flex justify-center">
+                <Turnstile
+                  siteKey={turnstileSiteKey}
+                  onVerify={setTurnstileToken}
+                />
+              </div>
+            )}
             <div className="mt-8">
               <Button
                 className="w-full h-11 sm:h-12"
                 loading={isLoading}
-                disabled={isLoading}
+                disabled={isLoading || (!!turnstileSiteKey && !turnstileToken)}
               >
                 {t('text-login')}
               </Button>

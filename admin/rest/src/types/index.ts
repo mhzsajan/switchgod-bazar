@@ -195,6 +195,7 @@ export interface PaginatorInfo<T> {
 export interface LoginInput {
   email: string;
   password: string;
+  turnstileToken?: string;
 }
 
 export interface AuthResponse {

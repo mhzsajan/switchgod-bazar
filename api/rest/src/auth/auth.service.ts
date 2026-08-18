@@ -318,6 +318,8 @@ private async verifyTurnstile(token?: string): Promise<void> {
   }
 
   async login(loginInput: LoginDto): Promise<AuthResponse> {
+    await this.verifyTurnstile(loginInput.turnstileToken);
+
     const user = this.users.find((u) => u.email === loginInput.email);
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');

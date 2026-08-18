@@ -16,6 +16,7 @@ import {
   hasAccess,
   setAuthCredentials,
 } from '@/utils/auth-utils';
+import Turnstile from '@/components/ui/turnstile';
 
 const loginFormSchema = yup.object().shape({
   email: yup
@@ -33,13 +34,16 @@ const defaultValues = {
 const LoginForm = () => {
   const { t } = useTranslation();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const { mutate: login, isLoading, error } = useLogin();
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   function onSubmit({ email, password }: LoginInput) {
     login(
       {
         email,
         password,
+        turnstileToken: turnstileToken || undefined,
       },
       {
         onSuccess: (data) => {
@@ -81,7 +85,19 @@ const LoginForm = () => {
               className="mb-4"
               forgotPageLink={Routes.forgotPassword}
             />
-            <Button className="w-full" loading={isLoading} disabled={isLoading}>
+            {turnstileSiteKey && (
+              <div className="mb-4 flex justify-center">
+                <Turnstile
+                  siteKey={turnstileSiteKey}
+                  onVerify={setTurnstileToken}
+                />
+              </div>
+            )}
+            <Button
+              className="w-full"
+              loading={isLoading}
+              disabled={isLoading || (!!turnstileSiteKey && !turnstileToken)}
+            >
               {t('form:button-label-login')}
             </Button>
 

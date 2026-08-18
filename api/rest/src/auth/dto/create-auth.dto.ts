@@ -15,7 +15,9 @@ export class RegisterDto extends PickType(User, ['name', 'email', 'password']) {
 
 export class LoginDto extends PartialType(
   PickType(User, ['email', 'password']),
-) {}
+) {
+  turnstileToken?: string;
+}
 
 export class SocialLoginDto {
   provider: string;
