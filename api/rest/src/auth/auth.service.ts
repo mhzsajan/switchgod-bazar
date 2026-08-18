@@ -428,11 +428,130 @@ export class AuthService {
   }
 
   async socialLogin(socialLoginDto: SocialLoginDto): Promise<AuthResponse> {
-    console.log(socialLoginDto);
+    const { provider, access_token } = socialLoginDto;
+    if (provider === 'google') {
+      return this.googleLogin(access_token);
+    }
+    throw new BadRequestException(`Unsupported provider: ${provider}`);
+  }
+
+  private async googleLogin(accessToken: string): Promise<AuthResponse> {
+    if (!accessToken) {
+      throw new UnauthorizedException('Missing Google access token');
+    }
+
+    const res = await fetch(
+      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${encodeURIComponent(accessToken)}`,
+    );
+    if (!res.ok) {
+      throw new UnauthorizedException('Invalid Google access token');
+    }
+    const info: any = await res.json();
+    if (!info?.email) {
+      throw new UnauthorizedException('Could not retrieve Google profile');
+    }
+
+    const expectedAud = process.env.GOOGLE_CLIENT_ID;
+    if (expectedAud && info.aud && info.aud !== expectedAud) {
+      throw new UnauthorizedException(
+        'Token was not issued for this application',
+      );
+    }
+
+    const email = info.email.toLowerCase();
+    const isAdmin = adminEmails().includes(email);
+    const permissionNames = isAdmin
+      ? ['super_admin', 'customer']
+      : ['customer'];
+
+    let user: any = this.users.find(
+      (u: any) => u.email.toLowerCase() === email,
+    );
+    let justVerified = false;
+
+    if (!user) {
+      const maxId =
+        this.users.length > 0
+          ? Math.max(...this.users.map((u) => u.id))
+          : 0;
+      user = {
+        id: maxId + 1,
+        name: info.name || email.split('@')[0],
+        email,
+        password: null,
+        is_active: 1,
+        email_verified: !!info.email_verified,
+        created_at: new Date(),
+        updated_at: new Date(),
+        permissions: permissionNames.map((name) => ({
+          id: name === 'super_admin' ? 1 : 2,
+          name,
+          guard_name: 'api',
+        })),
+        profile: {
+          id: maxId + 1,
+          avatar: null,
+          bio: null,
+          socials: null,
+          contact: null,
+          notifications: null,
+          customer_id: maxId + 1,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        wallet: null,
+        address: [],
+      };
+      this.users.push(user);
+      this.saveUsers();
+      if (user.email_verified) {
+        await this.mailService.sendWelcomeEmail(user.email, user.name);
+      }
+    } else {
+      const existingNames = (user.permissions || []).map((p: any) =>
+        typeof p === 'string' ? p : p.name,
+      );
+      const names =
+        isAdmin && !existingNames.includes('super_admin')
+          ? ['super_admin', ...existingNames]
+          : existingNames;
+      user.permissions = names.map((name: string) => ({
+        id: name === 'super_admin' ? 1 : 2,
+        name,
+        guard_name: 'api',
+      }));
+      if (info.email_verified && user.email_verified === false) {
+        user.email_verified = true;
+        justVerified = true;
+      }
+      user.updated_at = new Date();
+      this.saveUsers();
+    }
+
+    if (justVerified) {
+      await this.mailService.sendWelcomeEmail(user.email, user.name);
+    }
+
+    const permissionNamesFinal = (user.permissions || []).map((p: any) =>
+      typeof p === 'string' ? p : p.name,
+    );
+
+    if (user.email_verified === false) {
+      throw new HttpException(
+        'Email not verified. Please check your inbox for the verification code.',
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    const token = this.generateToken(user);
     return {
-      token: 'jwt token',
-      permissions: ['super_admin', 'customer'],
-      role: 'customer',
+      token,
+      permissions: permissionNamesFinal,
+      role: permissionNamesFinal.includes('super_admin')
+        ? 'super_admin'
+        : permissionNamesFinal.includes('store_owner')
+          ? 'store_owner'
+          : 'customer',
     };
   }
 
