@@ -178,6 +178,26 @@
 
 ---
 
+## Phase 12 — Auth Hardening & Email (Sessions 48-55, DONE ✅)
+
+> Custom-domain email, role security, email verification, Google login, Turnstile captcha, crash fixes.
+
+| # | Task | Status |
+|---|------|--------|
+| 12.1 | Email system — MailModule + MailService (Gmail SMTP), reset/verify/welcome/order/shop emails | `[x]` S48 |
+| 12.2 | Custom domain email — Cloudflare Email Routing (support@/admin@/info@ → Gmail), Gmail send-as alias, MAIL_FROM=support@switchgod.com.np | `[x]` S49 |
+| 12.3 | Role security — register() grants customer only; ADMIN_EMAILS env promotion | `[x]` S50 |
+| 12.4 | Mandatory email verification — 6-digit code, /me 409, verify-email endpoints + UI | `[x]` S50 |
+| 12.5 | Real Google login — token verification + aud check | `[x]` S51 |
+| 12.6 | dist/db ENOENT crash — mkdirSync in all 20 dual-write services | `[x]` S52 |
+| 12.7 | Turnstile captcha — registration (storefront + admin) | `[x]` S53 |
+| 12.8 | Turnstile captcha — login (storefront + admin) | `[x]` S54 |
+| 12.9 | Admin logout menu fix — role derivation + unconditional logout link | `[x]` S55 |
+
+**Deferred (needs external accounts/keys):** Phone OTP login (SMS provider — user said skip), Stripe/PayPal (API keys), AI descriptions (OpenAI key), wallet add-points.
+
+---
+
 ## Summary
 
 | Phase | Focus | Tasks | Done | Remaining |

@@ -1,5 +1,7 @@
 # COMMANDS — Working Commands Reference
 
+> **v1.1 (Aug 18, 2026):** Email, captcha (Turnstile), Google login, role security and email verification are live. Env vars added: `ADMIN_EMAILS`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `GOOGLE_CLIENT_ID` (api) + `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `GOOGLE_CLIENT_ID/SECRET` (shop). See `.deploy/README.md` §6. `npm install` inside shop/admin workspaces FAILS (husky) — use script-tag components, no new deps.
+
 <!-- !! FOR AI: Update this file after EVERY step. Add new working commands, remove broken ones, fix any that changed. Keep it accurate — user copies these directly. !! -->
 
 All commands tested and confirmed working on this machine.

@@ -1,5 +1,7 @@
 # Automation scripts for Pickbazar React
 
+> **v1.1 (Aug 18, 2026):** Live deployment state — see `/RESUME.md`, `/SESSIONS.md`, `/.deploy/README.md`. This file is stock vendor deployment automation (used only if re-deploying the API bundle).
+
 #### At first login your server from terminal
 
 ```bash

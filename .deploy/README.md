@@ -85,7 +85,7 @@ All run under PM2 with auto-start on boot (systemd).
 | Services built | ✅ API, Shop, Admin |
 | PM2 running | ✅ api, shop, admin, tunnel |
 | PM2 auto-start | ✅ systemd + pm2 save |
-| Git pushed | ✅ mhzsajan/pickbazar (private) — **force pushed to ace8c18** |
+| Git pushed | ✅ **mhzsajan/switchgod-bazar** (private, branch `main`) — fresh start Aug 18; old repo `mhzsajan/pickbazar` kept as reference |
 | Cloudflare Tunnel | ✅ switchgod-tunnel, 3 DNS routes |
 | Public URLs | ✅ switchgod.com.np, admin.*, api.* |
 | Font | ✅ Google Sans Code (SIL Open Font License) |
@@ -96,6 +96,13 @@ All run under PM2 with auto-start on boot (systemd).
 | Currency | ✅ Set to NPR (Nepalese Rupee) via Admin Dashboard |
 | API persistence (all services) | ✅ Phase 10 complete — all 30+ services persist to JSON on create/update/delete |
 | Auth security | ✅ **FIXED** — bcrypt password hashing, real JWT, hardcoded email checks removed. `/me` endpoint guarded. See Phase 11 |
+| Role security | ✅ **FIXED (S50)** — register grants `customer` only; admins via `ADMIN_EMAILS` env |
+| Email verification | ✅ **FIXED (S50)** — 6-digit code, `/me` 409 until verified, verify-email page UI |
+| Email (sending) | ✅ **LIVE (S48-49)** — Gmail SMTP from `support@switchgod.com.np` (alias), reset/verify/welcome/order/shop emails |
+| Email (receiving) | ✅ **LIVE (S49)** — Cloudflare Email Routing: support@/admin@/info@switchgod.com.np → Gmail |
+| Google login | ✅ **FIXED (S51)** — real token verification, auto-create customer, real JWT |
+| Captcha | ✅ **LIVE (S53-54)** — Cloudflare Turnstile on register + login (storefront + admin) |
+| Admin logout menu | ✅ **FIXED (S55)** — role derived from permissions, logout always visible |
 | Theme | ✅ **Pure light mode** — no dark mode, no dark toggle |
 | Dark mode backup | 🔄 Tag `v2.0-dark-mode-full`, branch `backup-dark-mode-full` |
 
@@ -125,22 +132,40 @@ You (VS Code) ──git push──> GitHub (mhzsajan/pickbazar)
 
 ## 6. Environment Variables
 
-### api/rest/.env
+### api/rest/.env (gitignored — contains secrets)
 ```env
 APP_NAME=PickBazar
 PORT=9000
 DEFAULT_CURRENCY=USD
 SHOP_URL=https://switchgod.com.np
+# Email (Gmail SMTP, app password)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_USER=mhzsajan@gmail.com
+SMTP_PASS=<gmail app password>
+MAIL_FROM=support@switchgod.com.np
+FRONTEND_URL=https://switchgod.com.np
+ADMIN_EMAIL=mhzsajan@gmail.com
+# Admin promotion (comma-separated; get super_admin on register)
+ADMIN_EMAILS=mhzsajan@gmail.com,admin@switchgod.com.np
+# Cloudflare Turnstile (created via CF API)
+TURNSTILE_SITE_KEY=0x4AAAAAAEUG15igFGFiQJMU
+TURNSTILE_SECRET_KEY=<secret>
+# Google login aud check (optional)
+GOOGLE_CLIENT_ID=1077694169384-...apps.googleusercontent.com
 ```
 
-### shop/.env.local
+### shop/.env.local (gitignored — contains secrets)
 ```env
 FRAMEWORK_PROVIDER="rest"
 NEXT_PUBLIC_REST_API_ENDPOINT="https://api.switchgod.com.np/api"
 APPLICATION_MODE=production
 NEXT_PUBLIC_ADMIN_URL="https://admin.switchgod.com.np"
 NEXTAUTH_URL=https://switchgod.com.np
-SECRET=your-secret-key-change-this
+SECRET=<random — was "your-secret-key-change-this", regenerated S51>
+GOOGLE_CLIENT_ID=1077694169384-...apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-...
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=0x4AAAAAAEUG15igFGFiQJMU
 NEXT_PUBLIC_SITE_URL=https://switchgod.com.np
 NEXT_PUBLIC_VERSION=11.10.2
 ```
@@ -150,6 +175,7 @@ NEXT_PUBLIC_VERSION=11.10.2
 NEXT_PUBLIC_REST_API_ENDPOINT="https://api.switchgod.com.np/api"
 NEXT_PUBLIC_SHOP_URL="https://switchgod.com.np"
 APPLICATION_MODE=production
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=0x4AAAAAAEUG15igFGFiQJMU
 NEXT_PUBLIC_VERSION=11.10.2
 ```
 

@@ -1,5 +1,7 @@
 # AUDIT — Mobile Visual/UX Issues (72 Findings)
 
+> **v1.1 (Aug 18, 2026):** Historic mobile audit. Newer work (Sessions 48-55: email, captcha, Google login, role security, email verification) is in `SESSIONS.md` and `.deploy/README.md`.
+
 > **AI CONTEXT FILE** — Full audit of mobile visual/UX issues found in the shop. Created Session 12. Reference this file when fixing mobile issues. Each issue has a file path, line number, and description.
 
 ---

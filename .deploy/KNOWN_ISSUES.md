@@ -4,6 +4,49 @@
 
 ---
 
+## Recent Issues (Sessions 49-55, all FIXED)
+
+### Issue: Anyone registering became super_admin (CRITICAL, FIXED S50)
+- **Symptom:** Every `/api/register` account got `super_admin` + `customer` permissions — anyone could enter the admin panel
+- **Root cause:** Stock `register()` in `api/rest/src/auth/auth.service.ts` hardcoded both permissions
+- **Fix:** Default = `customer` only; `ADMIN_EMAILS` env promotes admins. Commit `0ed267d`
+- **What NOT to try:** Re-adding super_admin to register default. Use ADMIN_EMAILS.
+
+### Issue: Email verification bypassed (FIXED S50)
+- **Symptom:** Users could log in without ever verifying their email (`email_verified: true` hardcoded)
+- **Fix:** 6-digit code + `email-verifications.json` (30min TTL, dual-write), `GET /me` → 409 until verified, endpoints `POST /verify-email` + `/email/verification-notification` (JWT-guarded), storefront `/verify-email` code-input UI
+
+### Issue: API crash after rebuild — ENOENT dist/db (FIXED S52)
+- **Symptom:** `npm run build` wipes `dist/db/pickbazar/*.json`; first save (register, shop, order…) crashed with `ENOENT .../dist/db/pickbazar/users.json`
+- **Root cause:** dual-write `saveToFile()` wrote to `dist/db` without `mkdirSync`
+- **Fix:** All 20 db services got `fs.mkdirSync(path.dirname(distPath), { recursive: true })` before the dist write. Commit `b8a015c`
+- **Lesson:** after ANY API rebuild, dist/db JSON is gone until the next dual-write — that's OK now, mkdir recreates it
+
+### Issue: Google login returned fake token (FIXED S51)
+- **Symptom:** `/social-login-token` returned `'jwt token'` (stock stub)
+- **Fix:** Verify access_token via `https://www.googleapis.com/oauth2/v3/userinfo`, aud check vs `GOOGLE_CLIENT_ID`, find/create user, real JWT
+
+### Issue: Admin avatar dropdown empty — no logout (FIXED S55)
+- **Symptom:** Top-right avatar menu showed no Profile/Logout items
+- **Root cause:** `authorized-menu.tsx` filtered links with `permission?.includes(role!)`; stale/missing `role` in the AUTH_CRED cookie hid everything
+- **Fix:** `getAuthCredentials()` derives role from permissions when absent; logout link exempt from role gate. Commit `e3ac437`
+
+### Issue: `npm install` fails in shop/admin workspaces (UNFIXED — WORKAROUND)
+- **Error:** `husky - .git can't be found` (prepare script)
+- **Workaround:** Avoid new npm deps in these workspaces. Load vendor scripts dynamically (see `shop/src/components/ui/turnstile.tsx` — script tag + `window.X.render` + cleanup on unmount)
+
+### Issue: Wrong Cloudflare zone (CLOSED S49)
+- User-provided zone `4c31a7c68f38aef752c16787e9704cb4` = **aussiebazar.com.au**. Correct switchgod.com.np zone = `7b412d7e52599a85d466c88551d9aa1f` (account `dc91e4a69167c4f28baf574d312e943b`). Don't touch the aussiebazar zone.
+
+### Known stubs (by design / pending)
+- Phone OTP login (`otp-login`, `send-otp-code`, `verify-otp-code`) — fake tokens; user said SKIP (needs Twilio/Nepal SMS provider)
+- Wallet `add-points` — returns `me()`; not used by storefront UI
+- AI `generate-descriptions` — dummy response (needs OpenAI key)
+- Payments (Stripe/PayPal) — wired but need real API keys
+- Admin build warning: `approveShopWithCommissionSchema` import error (pre-existing, non-blocking)
+
+---
+
 ## Add-to-Cart Issues (Session 16-17, REVERTED)
 
 All add-to-cart code was reverted to original. Here are the root causes found:

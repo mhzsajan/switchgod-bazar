@@ -1,5 +1,7 @@
 # scripts/
 
+> **v1.1 (Aug 18, 2026):** Project state is in `RESUME.md` / `SESSIONS.md` / `.deploy/README.md`. Recent version work (email, captcha, Google login, role security, email verification) is documented in SESSIONS.md rows 48-55.
+
 This folder contains all shell scripts and helpers for the switchgod.com.np deployment.
 Run them in order, from the project root `/home/switchgod/Desktop/New Pickbazar/`.
 

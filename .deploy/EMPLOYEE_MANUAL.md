@@ -1,5 +1,7 @@
 # Employee Manual — PickBazar Admin Panel
 
+> **v1.1 (Aug 18, 2026):** Since this version, login requires a Turnstile captcha ("I'm human" check) and registration requires email verification. Emails to staff come from `support@switchgod.com.np`. Project docs: `SESSIONS.md`, `.deploy/README.md`.
+
 > **For SwitchGod Company employees.** This manual explains how to manage your departments (shops), products, prices, and orders using the admin dashboard.
 
 ---

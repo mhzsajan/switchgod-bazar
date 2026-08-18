@@ -1,3 +1,21 @@
+# Version Update — v1.1 (Aug 18, 2026)
+
+> Applied to the switchgod.com.np deployment (repo `mhzsajan/switchgod-bazar`). This is the stock PickBazar vendor docs below; live project state lives in `RESUME.md`, `SESSIONS.md`, `.deploy/README.md`, `.deploy/KNOWN_ISSUES.md`.
+
+**What changed in this version (Sessions 48-55):**
+- Email system (Gmail SMTP) — password reset / email verification / welcome / shop / order emails; sending from `support@switchgod.com.np`
+- Cloudflare Email Routing — `support@`, `admin@`, `info@switchgod.com.np` forward to Gmail
+- Role security — new registrations get `customer` only; admins promoted via `ADMIN_EMAILS` env
+- Mandatory email verification — 6-digit code, `/me` returns 409 until verified, `/verify-email` page with code input
+- Real Google login (OAuth access-token verification)
+- Cloudflare Turnstile captcha on register + login (storefront + admin)
+- Crash fix: all 20 API db services `mkdirSync` before dual-write (dist/db wiped by rebuild)
+- Admin logout menu fix (role derived from permissions)
+
+> **Note:** Stock docs below reference `yarn` — this machine uses **npm** (see COMMANDS.md). Vendor GraphQL paths don't exist here (REST only).
+
+---
+
 Introduction
 Welcome to the PickBazar documentation! Fastest Ecommerce App built with React, NextJS, TypeScript, Laravel(GraphQL, REST API) and Tailwind.
 Navigation
