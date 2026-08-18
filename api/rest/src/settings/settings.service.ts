@@ -58,6 +58,8 @@ export class SettingsService {
     const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'settings.json');
     const data = JSON.stringify(this.settings, null, 2);
     fs.writeFileSync(srcPath, data);
+    fs.mkdirSync(path.dirname(distPath), { recursive: true });
+
     fs.writeFileSync(distPath, data);
   }
 }

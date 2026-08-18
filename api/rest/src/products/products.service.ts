@@ -229,6 +229,8 @@ export class ProductsService {
     const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'products.json');
     const data = JSON.stringify(this.products, null, 2);
     fs.writeFileSync(srcPath, data);
+    fs.mkdirSync(path.dirname(distPath), { recursive: true });
+
     fs.writeFileSync(distPath, data);
   }
 }

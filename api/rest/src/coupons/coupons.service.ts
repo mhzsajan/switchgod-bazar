@@ -153,6 +153,8 @@ export class CouponsService {
     const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'coupons.json');
     const data = JSON.stringify(this.coupons, null, 2);
     fs.writeFileSync(srcPath, data);
+    fs.mkdirSync(path.dirname(distPath), { recursive: true });
+
     fs.writeFileSync(distPath, data);
   }
 }

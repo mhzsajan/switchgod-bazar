@@ -98,6 +98,8 @@ export class QuestionService {
     const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'questions.json');
     const data = JSON.stringify(this.question, null, 2);
     fs.writeFileSync(srcPath, data);
+    fs.mkdirSync(path.dirname(distPath), { recursive: true });
+
     fs.writeFileSync(distPath, data);
   }
 }

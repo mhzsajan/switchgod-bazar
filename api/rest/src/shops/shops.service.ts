@@ -208,6 +208,9 @@ export class ShopsService {
     const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'shops.json');
     const data = JSON.stringify(this.shops, null, 2);
     fs.writeFileSync(srcPath, data);
+    fs.mkdirSync(path.dirname(distPath), { recursive: true });
+    fs.mkdirSync(path.dirname(distPath), { recursive: true });
+
     fs.writeFileSync(distPath, data);
   }
 }

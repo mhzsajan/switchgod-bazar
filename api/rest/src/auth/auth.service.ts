@@ -109,6 +109,8 @@ export class AuthService {
     fs.writeFileSync(resetsFile(), data);
     const distFile = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'password-resets.json');
     fs.mkdirSync(path.dirname(distFile), { recursive: true });
+    fs.mkdirSync(path.dirname(distFile), { recursive: true });
+
     fs.writeFileSync(distFile, data);
   }
 
@@ -123,13 +125,19 @@ export class AuthService {
       'email-verifications.json',
     );
     fs.mkdirSync(path.dirname(distFile), { recursive: true });
+    fs.mkdirSync(path.dirname(distFile), { recursive: true });
+
     fs.writeFileSync(distFile, data);
   }
 
   private saveUsers() {
     const data = JSON.stringify(this.users, null, 2);
     fs.writeFileSync(path.join(process.cwd(), 'src', 'db', 'pickbazar', 'users.json'), data);
-    fs.writeFileSync(path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'users.json'), data);
+    const distFile = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'users.json');
+    fs.mkdirSync(path.dirname(distFile), { recursive: true });
+    fs.mkdirSync(path.dirname(distFile), { recursive: true });
+
+    fs.writeFileSync(distFile, data);
   }
 
   findById(id: number): User | undefined {
