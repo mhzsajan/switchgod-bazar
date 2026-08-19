@@ -28,11 +28,13 @@ export class SettingsService {
   }
 
   findAll() {
+    this.reloadFromFile();
     return this.settings;
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} setting`;
+    this.reloadFromFile();
+    return this.settings;
   }
 
   update(id: number, updateSettingDto: UpdateSettingDto) {
@@ -50,10 +52,33 @@ export class SettingsService {
   }
 
   remove(id: number) {
-    return `This action removes a #${id} setting`;
+    // Settings are a singleton — removing is not supported.
+    return null;
   }
 
-    private saveToFile() {
+    private reloadFromFile() {
+    try {
+      const distPath = path.join(
+        process.cwd(),
+        'dist',
+        'db',
+        'pickbazar',
+        'settings.json',
+      );
+      this.settings = JSON.parse(fs.readFileSync(distPath, 'utf8'));
+    } catch {
+      const srcPath = path.join(
+        process.cwd(),
+        'src',
+        'db',
+        'pickbazar',
+        'settings.json',
+      );
+      this.settings = JSON.parse(fs.readFileSync(srcPath, 'utf8'));
+    }
+  }
+
+  private saveToFile() {
     const srcPath = path.join(process.cwd(), 'src', 'db', 'pickbazar', 'settings.json');
     const distPath = path.join(process.cwd(), 'dist', 'db', 'pickbazar', 'settings.json');
     const data = JSON.stringify(this.settings, null, 2);

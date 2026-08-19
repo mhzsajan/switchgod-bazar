@@ -33,9 +33,14 @@ export class NotifyLogsController {
     return this.notifyLogsService.readNotifyLog(+id);
   }
 
-  @Put(':id')
-  notifyLogAllRead(@Param('id') id: string) {
-    return this.notifyLogsService.readAllNotifyLogs(+id);
+  @Post('notify-log-seen')
+  readNotifyLogByPost(@Body('id') id: string) {
+    return this.notifyLogsService.readNotifyLog(+id);
+  }
+
+  @Post('notify-log-read-all')
+  notifyLogAllRead(@Body() body: any) {
+    return this.notifyLogsService.readAllNotifyLogs(body?.receiver);
   }
 
   @Delete(':id')
