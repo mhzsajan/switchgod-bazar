@@ -140,7 +140,36 @@ export class AuthService {
     fs.writeFileSync(distFile, data);
   }
 
+  private reloadUsers() {
+    try {
+      const distPath = path.join(
+        process.cwd(),
+        'dist',
+        'db',
+        'pickbazar',
+        'users.json',
+      );
+      const raw = fs.readFileSync(distPath, 'utf8');
+      this.users = plainToClass(User, JSON.parse(raw)) as any;
+    } catch {
+      try {
+        const srcPath = path.join(
+          process.cwd(),
+          'src',
+          'db',
+          'pickbazar',
+          'users.json',
+        );
+        const raw = fs.readFileSync(srcPath, 'utf8');
+        this.users = plainToClass(User, JSON.parse(raw)) as any;
+      } catch {
+        // keep in-memory state as fallback
+      }
+    }
+  }
+
   findById(id: number): User | undefined {
+    this.reloadUsers();
     return this.users.find((u) => u.id === Number(id));
   }
 
@@ -319,6 +348,7 @@ private async verifyTurnstile(token?: string): Promise<void> {
 
   async login(loginInput: LoginDto): Promise<AuthResponse> {
     await this.verifyTurnstile(loginInput.turnstileToken);
+    this.reloadUsers();
 
     const user = this.users.find((u) => u.email === loginInput.email);
     if (!user) {
@@ -620,6 +650,7 @@ private async verifyTurnstile(token?: string): Promise<void> {
   }
 
   me(email?: string): User {
+    this.reloadUsers();
     if (email) {
       const user = this.users.find((u: any) => u.email === email);
       if (user) {

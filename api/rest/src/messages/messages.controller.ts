@@ -8,8 +8,11 @@ export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
 
   @Post(':id')
-  createMessage(@Body() createMessageDto: CreateMessageDto) {
-    return this.messagesService.createMessage(createMessageDto);
+  createMessage(
+    @Body() createMessageDto: CreateMessageDto,
+    @Param('id') id: string,
+  ) {
+    return this.messagesService.createMessage(createMessageDto, id);
   }
 
   @Get(':param')

@@ -56,6 +56,9 @@ export const userClient = {
   makeAdmin: (variables: MakeAdminInput) => {
     return HttpClient.post<any>(API_ENDPOINTS.MAKE_ADMIN, variables);
   },
+  revokeAdmin: (variables: MakeAdminInput) => {
+    return HttpClient.post<any>(API_ENDPOINTS.REVOKE_ADMIN, variables);
+  },
   block: (variables: BlockUserInput) => {
     return HttpClient.post<any>(API_ENDPOINTS.BLOCK_USER, variables);
   },

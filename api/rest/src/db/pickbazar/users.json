@@ -6,7 +6,7 @@
     "email": "mhzsajan@gmail.com",
     "email_verified_at": "2023-11-12T10:59:14.000000Z",
     "created_at": "2026-08-18T00:00:00.000Z",
-    "updated_at": "2026-08-18T14:06:46.934Z",
+    "updated_at": "2026-08-19T02:47:33.549Z",
     "shop_id": null,
     "email_verified": true,
     "profile": {
@@ -1095,14 +1095,14 @@
     "password": "$2b$10$4APCHGiF/hghINwCkw7pWuQJGXqi2aMB8hIaGyt80kvNywZaUi.na"
   },
   {
-    "is_active": 1,
+    "is_active": true,
     "id": 5,
     "name": "SwitchGod",
     "email": "admin@switchgod.com.np",
     "password": "$2b$10$2AkwxNQ3G3UtiHFvWbw2VO0/zPw4pNe7MsSBA5OG29nePHAGLXN/e",
     "email_verified": true,
     "created_at": "2026-08-18T13:40:26.086Z",
-    "updated_at": "2026-08-18T13:40:26.086Z",
+    "updated_at": "2026-08-19T02:48:30.530Z",
     "permissions": [
       {
         "id": 1,

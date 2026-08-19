@@ -190,6 +190,21 @@ export const useMakeOrRevokeAdminMutation = () => {
   });
 };
 
+export const useRevokeAdminMutation = () => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation(userClient.revokeAdmin, {
+    onSuccess: () => {
+      toast.success(t('common:successfully-updated'));
+    },
+    // Always refetch after error or success:
+    onSettled: () => {
+      queryClient.invalidateQueries(API_ENDPOINTS.USERS);
+    },
+  });
+};
+
 export const useBlockUserMutation = () => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();

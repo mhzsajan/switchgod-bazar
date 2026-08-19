@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -14,6 +15,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { GetUsersDto } from './dto/get-users.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { SuperAdminGuard } from '../auth/super-admin.guard';
 
 @Controller('users')
 export class UsersController {
@@ -45,18 +48,27 @@ export class UsersController {
   }
 
   @Post('unblock-user')
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
   activeUser(@Body('id') id: number) {
     return this.usersService.activeUser(+id);
   }
 
   @Post('block-user')
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
   banUser(@Body('id') id: number) {
     return this.usersService.banUser(+id);
   }
 
   @Post('make-admin')
-  makeAdmin(@Param('user_id') id: string) {
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  makeAdmin(@Body('user_id') id: string) {
     return this.usersService.makeAdmin(id);
+  }
+
+  @Post('revoke-admin')
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  revokeAdmin(@Body('user_id') id: string) {
+    return this.usersService.revokeAdmin(id);
   }
 }
 

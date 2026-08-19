@@ -173,15 +173,16 @@ const UserList = ({
       key: 'actions',
       align: 'right',
       width: 120,
-      render: function Render(id: string, { is_active }: any) {
+      render: function Render(id: string, record: any) {
         const { data } = useMeQuery();
         return (
           <>
             {data?.id != id && (
               <ActionButtons
                 id={id}
+                data={record}
                 userStatus={true}
-                isUserActive={is_active}
+                isUserActive={record?.is_active}
                 showAddWalletPoints={true}
                 showMakeAdminButton={true}
               />

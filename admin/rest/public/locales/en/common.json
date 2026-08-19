@@ -287,6 +287,8 @@
   "text-yes": "Yes",
   "text-make-admin": "Assign Or Revoke Admin Permission ",
   "text-description-make-admin": "Are you sure you want to assign/revoke admin permission?",
+  "text-remove-admin": "Revoke Admin Permission",
+  "text-description-remove-admin": "Are you sure you want to revoke this user's admin permission?",
   "text-customer": "Customer",
   "text-contact-number": "Contact Number",
   "text-billing-address": "Billing Address",

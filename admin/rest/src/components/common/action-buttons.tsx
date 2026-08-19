@@ -43,9 +43,7 @@ type Props = {
   flashSaleVendorRequestApproveButton?: boolean;
   isFlashSaleVendorRequestApproved?: boolean;
   transferShopOwnership?: boolean;
-  data?: {
-    [key: string]: string | boolean | number;
-  };
+  data?: Record<string, any>;
   disabled?: boolean;
 };
 
@@ -99,7 +97,7 @@ const ActionButtons = ({
   }
 
   function handleMakeAdmin() {
-    openModal('MAKE_ADMIN', id);
+    openModal('MAKE_ADMIN', data || id);
   }
 
   function handleUpdateRefundStatus() {
@@ -166,7 +164,13 @@ const ActionButtons = ({
         <button
           onClick={handleMakeAdmin}
           className="transition duration-200 text-accent hover:text-accent-hover focus:outline-none"
-          title={t('common:text-make-admin')}
+          title={
+            data?.permissions?.some(
+              (permission: any) => permission?.name === 'super_admin',
+            )
+              ? t('common:text-remove-admin')
+              : t('common:text-make-admin')
+          }
         >
           <AdminIcon width={17} />
         </button>

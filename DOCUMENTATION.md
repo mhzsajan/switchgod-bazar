@@ -1,3 +1,18 @@
+# Version Update — v1.2 (Aug 19, 2026)
+
+> Applied to the switchgod.com.np deployment (repo `mhzsajan/switchgod-bazar`). Live project state lives in `RESUME.md`, `SESSIONS.md`, `.deploy/README.md`, `.deploy/KNOWN_ISSUES.md`.
+
+**What changed in this version (Session 56):**
+- **Make Admin actually works** — real `super_admin` permission grant/revoke on users.json, admin UI Make/Revoke toggle, guarded by new `SuperAdminGuard` (JWT + permission check) on block/unblock/make-admin/revoke-admin routes
+- **Real profile image upload** — `POST /attachments` now saves to `api/rest/uploads/` via multer and returns a real served URL (`/uploads/*`); `users.update()` merges profile + address (unique ids) instead of dropping them
+- **Stale in-memory data fixed** — auth.users and users.service now `reloadFromFile()` before every operation (dual-array ghost solved)
+- **~15 stub endpoints → real persisted CRUD** — addresses, refunds, wishlists (toggle persists `in_wishlist` on products.json), my-wishlists, conversations, messages, newsletters (dedupe), feedbacks, abusive reports, withdraws (+approve), ownership-transfer. All follow reload-from-file + dual-write (src + dist) pattern.
+- **Still stubs by design:** phone OTP login, AI descriptions, Stripe/PayPal, imports, webhooks, become-seller
+
+> **Ops notes:** Caddy needs a `/uploads/*` route on `api.switchgod.com.np` for uploaded images in production. For captcha-protected curl tests use Turnstile always-pass key `1x0000000000000000000000000000000AA` and restore the real secret afterward. Nest incremental build can serve stale dist — `rm -rf dist` + rebuild if the API crash-loops after edits.
+
+---
+
 # Version Update — v1.1 (Aug 18, 2026)
 
 > Applied to the switchgod.com.np deployment (repo `mhzsajan/switchgod-bazar`). This is the stock PickBazar vendor docs below; live project state lives in `RESUME.md`, `SESSIONS.md`, `.deploy/README.md`, `.deploy/KNOWN_ISSUES.md`.
