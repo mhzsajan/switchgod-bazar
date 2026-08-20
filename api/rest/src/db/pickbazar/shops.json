@@ -599,5 +599,42 @@
         "updated_at": "2021-06-30T14:13:53.000000Z"
       }
     }
+  },
+  {
+    "settings": {
+      "notifications": {},
+      "contact": "9779840321244",
+      "website": "switchgod.com.np",
+      "socials": [],
+      "location": {}
+    },
+    "balance": {
+      "payment_info": {
+        "name": "Sajan Maharajan",
+        "email": "mhzsajan@gmail.com",
+        "bank": "fdjhdiugjopr",
+        "account": 3246580
+      }
+    },
+    "name": " Nintendo Switch Gaming Shop",
+    "description": "",
+    "address": {
+      "country": "Nepal",
+      "city": "Kathmandu",
+      "state": "Bagmati",
+      "zip": "",
+      "street_address": ""
+    },
+    "id": 13,
+    "slug": "nintendo-switch-gaming-shop",
+    "is_active": true,
+    "orders_count": 0,
+    "products_count": 0,
+    "owner": null,
+    "owner_id": 1,
+    "created_at": "2026-08-19T05:09:54.328Z",
+    "updated_at": "2026-08-19T13:29:41.680Z",
+    "logo": null,
+    "cover_image": null
   }
 ]

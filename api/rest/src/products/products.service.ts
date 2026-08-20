@@ -41,20 +41,47 @@ export class ProductsService {
   private bestSellingProducts: any = bestSellingProducts;
 
   create(createProductDto: CreateProductDto) {
+    this.reloadFromFile();
+    const dto: any = createProductDto as any;
     const newId = this.products.length > 0
       ? Math.max(...this.products.map((p) => p.id)) + 1
       : 1;
+
+    // Resolve relations into embedded objects (seed data shape)
+    let shop: any = dto.shop || null;
+    if (!shop && dto.shop_id) {
+      shop = this.findRelation('shops.json', dto.shop_id);
+    }
+    let type: any = dto.type || null;
+    if (!type && dto.type_id) {
+      type = this.findRelation('types.json', dto.type_id);
+    }
+    const categories = Array.isArray(dto.categories) && dto.categories.length
+      ? dto.categories
+      : this.findRelationsByIds('categories.json', dto.category_ids || []);
+
     const newProduct: Product = {
-      ...createProductDto,
+      ...dto,
       id: newId,
-      slug: createProductDto.name.toLowerCase().replace(/\s+/g, '-') + '-' + newId,
-      product_type: createProductDto.product_type || 'simple',
-      status: createProductDto.status || 'draft',
-      in_stock: createProductDto.in_stock ?? true,
-      is_taxable: createProductDto.is_taxable ?? false,
+      shop_id: dto.shop_id ?? (shop ? shop.id : null),
+      shop,
+      type_id: dto.type_id ?? (type ? type.id : null),
+      type,
+      categories,
+      slug:
+        (dto.slug ||
+          dto.name.toLowerCase().replace(/\s+/g, '-')) + '-' + newId,
+      product_type: dto.product_type || 'simple',
+      status: dto.status || 'draft',
+      visibility: dto.visibility || 'visibility_public',
+      is_active: dto.is_active ?? true,
+      deleted_at: dto.deleted_at ?? null,
+      translated_languages: dto.translated_languages || ['en'],
+      in_stock: dto.in_stock ?? true,
+      is_taxable: dto.is_taxable ?? false,
       ratings: 0,
       in_wishlist: false,
-      language: 'en',
+      language: dto.language || 'en',
       created_at: new Date(),
       updated_at: new Date(),
     } as unknown as Product;
@@ -63,7 +90,49 @@ export class ProductsService {
     return newProduct;
   }
 
+  private findRelation(fileName: string, id: number): any {
+    try {
+      const list = this.readDbFile(fileName);
+      return (
+        list.find((item: any) => Number(item.id) === Number(id)) || null
+      );
+    } catch {
+      return null;
+    }
+  }
+
+  private findRelationsByIds(fileName: string, ids: number[]): any[] {
+    if (!ids || ids.length === 0) return [];
+    try {
+      const list = this.readDbFile(fileName);
+      return list.filter((item: any) =>
+        ids.map(Number).includes(Number(item.id)),
+      );
+    } catch {
+      return [];
+    }
+  }
+
+  private readDbFile(fileName: string): any[] {
+    for (const base of ['dist', 'src']) {
+      try {
+        const p = path.join(
+          process.cwd(),
+          base,
+          'db',
+          'pickbazar',
+          fileName,
+        );
+        return JSON.parse(fs.readFileSync(p, 'utf8'));
+      } catch {
+        continue;
+      }
+    }
+    return [];
+  }
+
   getProducts({ limit, page, search }: GetProductsDto): ProductPaginator {
+    this.reloadFromFile();
     if (!page) page = 1;
     if (!limit) limit = 30;
     const startIndex = (page - 1) * limit;
@@ -92,7 +161,11 @@ export class ProductsService {
     }
 
     if (exactFilters.shop_id) {
-      data = data.filter((product) => product.shop.id === exactFilters.shop_id);
+      data = data.filter(
+        (product) => (product as any)?.shop?.id === exactFilters.shop_id,
+      );
+      // Newest first so newly created products appear on the first page
+      data = [...data].sort((a: any, b: any) => Number(b.id) - Number(a.id));
     }
 
     const results = data.slice(startIndex, endIndex);
@@ -104,9 +177,19 @@ export class ProductsService {
   }
 
   getProductBySlug(slug: string): Product {
-    const product = this.products.find((p) => p.slug === slug);
+    this.reloadFromFile();
+    const product =
+      this.products.find((p) => p.slug === slug) ||
+      this.products.find((p) => String(p.id) === slug);
+    if (!product) {
+      return undefined;
+    }
     const related_products = this.products
-      .filter((p) => p.type.slug === product.type.slug)
+      .filter(
+        (p) =>
+          p.type?.slug === product.type?.slug &&
+          String(p.id) !== String(product.id),
+      )
       .slice(0, 20);
     return {
       ...product,
@@ -133,6 +216,7 @@ export class ProductsService {
   }
 
   getProductsStock({ limit, page, search }: GetProductsDto): ProductPaginator {
+    this.reloadFromFile();
     if (!page) page = 1;
     if (!limit) limit = 30;
     const startIndex = (page - 1) * limit;
@@ -168,6 +252,7 @@ export class ProductsService {
   }
 
   getDraftProducts({ limit, page, search }: GetProductsDto): ProductPaginator {
+    this.reloadFromFile();
     if (!page) page = 1;
     if (!limit) limit = 30;
     const startIndex = (page - 1) * limit;
@@ -205,6 +290,14 @@ export class ProductsService {
   }
 
   update(id: number, updateProductDto: UpdateProductDto) {
+    this.reloadFromFile();
+    const dto: any = updateProductDto as any;
+    if (dto.shop_id && !dto.shop) {
+      dto.shop = this.findRelation('shops.json', dto.shop_id);
+    }
+    if (dto.type_id && !dto.type) {
+      dto.type = this.findRelation('types.json', dto.type_id);
+    }
     const index = this.products.findIndex((p) => p.id === Number(id));
     if (index === -1) return null;
     this.products[index] = {
@@ -217,11 +310,30 @@ export class ProductsService {
   }
 
   remove(id: number) {
+    this.reloadFromFile();
     const index = this.products.findIndex((p) => p.id === Number(id));
     if (index === -1) return null;
     const removed = this.products.splice(index, 1)[0];
     this.saveToFile();
     return removed;
+  }
+
+  private reloadFromFile() {
+    for (const base of ['dist', 'src']) {
+      try {
+        const p = path.join(
+          process.cwd(),
+          base,
+          'db',
+          'pickbazar',
+          'products.json',
+        );
+        this.products = JSON.parse(fs.readFileSync(p, 'utf8'));
+        return;
+      } catch {
+        continue;
+      }
+    }
   }
 
     private saveToFile() {

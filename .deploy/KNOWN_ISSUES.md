@@ -4,7 +4,17 @@
 
 ---
 
-## Recent Issues (Sessions 49-55, all FIXED)
+## Recent Issues (Sessions 49-58, all FIXED)
+
+### Issue: Product create 500 + invisible products + wrong shop products (FIXED S58)
+- **Symptom:** Creating a product in admin → 500. New products never appear on the storefront. New shop counter showed 0 but foreign products appeared on its page; shop was missing from listings entirely.
+- **Root causes (4 separate bugs, same chain):**
+  1. `create()` stored only `shop_id` — no embedded `shop` object → `getProducts` filter `product.shop.id` crashed (500) and the storefront's fuse `$and` silently dropped items missing `visibility:visibility_public` (invisible products)
+  2. Shop id 12 was reused — 188 orphaned seed products from the deleted "Gaming Shop" (S44/S49) still pointed at id 12 → foreign products on the new store + `products_count` hardcoded 0
+  3. `getShops` `is_active` query param arrives as string `"1"` (Nest) vs boolean `true` → strict `===` filtered out ALL shops
+  4. `GET /products/{id}` 500 — `getProductBySlug()` looked up by slug only and crashed dereferencing an undefined product
+- **Fixes:** `create()` resolves shop/type/categories from the JSON files + defaults `visibility`/`is_active`/`deleted_at`/`translated_languages`; defensive `product?.shop?.id` filter + all methods `reloadFromFile()` + newest-first sorting for shop pages; shop re-id 12→13 (no orders referenced 12) + products repointed; live `products_count` via new `countProducts()`/`withCounts()`; `is_active` coercion (`true/'true'/1/1`); `getProductBySlug` matches slug OR numeric id and 404s instead of crashing
+- **What NOT to try:** Reusing a deleted shop's numeric id; strict `===` on query-param booleans; assuming the admin edit form uses id-based GET (it uses slug — only the broken id GET 500'd)
 
 ### Issue: Anyone registering became super_admin (CRITICAL, FIXED S50)
 - **Symptom:** Every `/api/register` account got `super_admin` + `customer` permissions — anyone could enter the admin panel
@@ -410,4 +420,4 @@ Additionally:
 ---
 
 *Created: Session 17 — June 28, 2026*<br>
-*Updated: Session 44 — July 17, 2026*
+*Updated: Session 58 — August 20, 2026*

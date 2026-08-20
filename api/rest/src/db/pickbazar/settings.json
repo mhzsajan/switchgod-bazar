@@ -57,7 +57,7 @@
       "file_name": "Pickbazar.png"
     },
     "useOtp": false,
-    "currency": "USD",
+    "currency": "NPR",
     "taxClass": "1",
     "siteTitle": "Pickbazar",
     "freeShipping": false,
@@ -96,10 +96,14 @@
       {
         "name": "stripe",
         "title": "Stripe"
+      },
+      {
+        "name": "paypal",
+        "title": "Paypal"
       }
     ],
     "currencyOptions": {
-      "formation": "en-US",
+      "formation": "en-IN",
       "fractions": 2
     },
     "useEnableGateway": false,
@@ -122,7 +126,7 @@
     "defaultAi": "openai",
     "maxShopDistance": null,
     "siteLink": "https://pickbazar.redq.io",
-    "copyrightText": "Copyright \u00a9 REDQ. All rights reserved worldwide.",
+    "copyrightText": "Copyright © REDQ. All rights reserved worldwide.",
     "externalText": "REDQ",
     "externalLink": "https://redq.io",
     "smsEvent": {
@@ -217,5 +221,5 @@
   },
   "language": "en",
   "created_at": "2024-01-31T06:33:30.000000Z",
-  "updated_at": "2024-02-06T06:07:32.000000Z"
+  "updated_at": "2026-08-19T15:29:37.552Z"
 }

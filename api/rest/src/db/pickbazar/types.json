@@ -1,62 +1,11 @@
 [
   {
-    "id": 1,
-    "name": "Grocery",
-    "language": "en",
-    "translated_languages": ["en"],
-    "slug": "grocery",
-    "banners": [
-      {
-        "id": 54,
-        "title": "Groceries Delivered in 90 Minute",
-        "type_id": 1,
-        "description": "Get your healthy foods & snacks delivered at your doorsteps all day everyday",
-        "image": {
-          "id": 907,
-          "thumbnail": "https://pickbazarlaravel.s3.ap-southeast-1.amazonaws.com/904/conversions/grocery-thumbnail.jpg",
-          "original": "https://pickbazarlaravel.s3.ap-southeast-1.amazonaws.com/904/grocery.png"
-        }
-      }
-    ],
-    "promotional_sliders": [
-      {
-        "thumbnail": "https://pickbazarlaravel.s3.ap-southeast-1.amazonaws.com/902/conversions/offer-5-thumbnail.jpg",
-        "original": "https://pickbazarlaravel.s3.ap-southeast-1.amazonaws.com/902/offer-5.png",
-        "id": "902"
-      },
-      {
-        "thumbnail": "https://pickbazarlaravel.s3.ap-southeast-1.amazonaws.com/903/conversions/offer-4-thumbnail.jpg",
-        "original": "https://pickbazarlaravel.s3.ap-southeast-1.amazonaws.com/903/offer-4.png",
-        "id": "903"
-      },
-      {
-        "thumbnail": "https://pickbazarlaravel.s3.ap-southeast-1.amazonaws.com/904/conversions/offer-3-thumbnail.jpg",
-        "original": "https://pickbazarlaravel.s3.ap-southeast-1.amazonaws.com/904/offer-3.png",
-        "id": "904"
-      },
-      {
-        "thumbnail": "https://pickbazarlaravel.s3.ap-southeast-1.amazonaws.com/905/conversions/offer-2-thumbnail.jpg",
-        "original": "https://pickbazarlaravel.s3.ap-southeast-1.amazonaws.com/905/offer-2.png",
-        "id": "905"
-      },
-      {
-        "thumbnail": "https://pickbazarlaravel.s3.ap-southeast-1.amazonaws.com/906/conversions/offer-1-thumbnail.jpg",
-        "original": "https://pickbazarlaravel.s3.ap-southeast-1.amazonaws.com/906/offer-1.png",
-        "id": "906"
-      }
-    ],
-    "settings": {
-      "isHome": false,
-      "productCard": "helium",
-      "layoutType": "classic"
-    },
-    "icon": "FruitsVegetable"
-  },
-  {
     "id": 2,
     "name": "Bakery",
     "language": "en",
-    "translated_languages": ["en"],
+    "translated_languages": [
+      "en"
+    ],
     "slug": "bakery",
     "banners": [
       {
@@ -83,7 +32,9 @@
     "id": 3,
     "name": "Makeup",
     "language": "en",
-    "translated_languages": ["en"],
+    "translated_languages": [
+      "en"
+    ],
     "slug": "makeup",
     "banners": [
       {
@@ -136,7 +87,9 @@
     "id": 4,
     "name": "Bags",
     "language": "en",
-    "translated_languages": ["en"],
+    "translated_languages": [
+      "en"
+    ],
     "slug": "bags",
     "banners": [
       {
@@ -189,7 +142,9 @@
     "id": 5,
     "name": "Clothing",
     "language": "en",
-    "translated_languages": ["en"],
+    "translated_languages": [
+      "en"
+    ],
     "slug": "clothing",
     "banners": [
       {
@@ -242,7 +197,9 @@
     "id": 6,
     "name": "Furniture",
     "language": "en",
-    "translated_languages": ["en"],
+    "translated_languages": [
+      "en"
+    ],
     "slug": "furniture",
     "banners": [
       {
@@ -306,7 +263,9 @@
     "id": 7,
     "name": "Daily Needs",
     "language": "en",
-    "translated_languages": ["en"],
+    "translated_languages": [
+      "en"
+    ],
     "slug": "daily-needs",
     "banners": [
       {
@@ -334,57 +293,59 @@
     "name": "Books",
     "language": "en",
     "translated_languages": [
-        "en",
-        "de"
+      "en",
+      "de"
     ],
     "slug": "books",
     "banners": [
-        {
-            "id": 46,
-            "title": "book banner",
-            "type_id": 8,
-            "description": "this the book demo banner",
-            "image": {
-                "id": 1376,
-                "thumbnail": "https:\/\/pickbazarlaravel.s3.ap-southeast-1.amazonaws.com\/1376\/conversions\/Cover-thumbnail.jpg",
-                "original": "https:\/\/pickbazarlaravel.s3.ap-southeast-1.amazonaws.com\/1376\/Cover.png"
-            }
+      {
+        "id": 46,
+        "title": "book banner",
+        "type_id": 8,
+        "description": "this the book demo banner",
+        "image": {
+          "id": 1376,
+          "thumbnail": "https://pickbazarlaravel.s3.ap-southeast-1.amazonaws.com/1376/conversions/Cover-thumbnail.jpg",
+          "original": "https://pickbazarlaravel.s3.ap-southeast-1.amazonaws.com/1376/Cover.png"
         }
+      }
     ],
     "promotional_sliders": [],
     "settings": {
-        "isHome": false,
-        "productCard": "radon",
-        "layoutType": "compact",
-        "bestSelling": {
-            "enable": true,
-            "title": "Best Selling Products"
-        },
-        "popularProducts": {
-            "enable": true,
-            "title": "Popular Products"
-        },
-        "category": {
-            "enable": true,
-            "title": "Whick Book You Like To See?"
-        },
-        "handpickedProducts": [],
-        "newArrival": {
-            "enable": true,
-            "title": "New Arrival"
-        },
-        "authors": {
-            "enable": false
-        },
-        "manufactures": []
+      "isHome": false,
+      "productCard": "radon",
+      "layoutType": "compact",
+      "bestSelling": {
+        "enable": true,
+        "title": "Best Selling Products"
+      },
+      "popularProducts": {
+        "enable": true,
+        "title": "Popular Products"
+      },
+      "category": {
+        "enable": true,
+        "title": "Whick Book You Like To See?"
+      },
+      "handpickedProducts": [],
+      "newArrival": {
+        "enable": true,
+        "title": "New Arrival"
+      },
+      "authors": {
+        "enable": false
+      },
+      "manufactures": []
     },
     "icon": "BookIcon"
-},
+  },
   {
     "id": 9,
     "name": "Gadget",
     "language": "en",
-    "translated_languages": ["en"],
+    "translated_languages": [
+      "en"
+    ],
     "slug": "gadget",
     "banners": [
       {
@@ -411,7 +372,9 @@
     "id": 11,
     "name": "Medicine",
     "language": "en",
-    "translated_languages": ["en"],
+    "translated_languages": [
+      "en"
+    ],
     "slug": "medicine",
     "banners": [
       {
@@ -454,5 +417,47 @@
       "layoutType": "classic"
     },
     "icon": "MedicineIcon"
+  },
+  {
+    "language": "en",
+    "name": "Gaming",
+    "settings": {
+      "isHome": false,
+      "productCard": "helium",
+      "layoutType": "classic",
+      "bestSelling": {},
+      "popularProducts": {},
+      "category": {},
+      "handpickedProducts": {},
+      "newArrival": {},
+      "authors": {},
+      "manufactures": {}
+    },
+    "banners": [],
+    "id": 12,
+    "slug": "type-12",
+    "created_at": "2026-08-19T05:42:41.120Z",
+    "updated_at": "2026-08-19T05:42:41.120Z"
+  },
+  {
+    "language": "en",
+    "name": "Nintendo Switch",
+    "settings": {
+      "isHome": false,
+      "productCard": "helium",
+      "layoutType": "classic",
+      "bestSelling": {},
+      "popularProducts": {},
+      "category": {},
+      "handpickedProducts": {},
+      "newArrival": {},
+      "authors": {},
+      "manufactures": {}
+    },
+    "banners": [],
+    "id": 13,
+    "slug": "type-13",
+    "created_at": "2026-08-19T13:45:11.473Z",
+    "updated_at": "2026-08-19T13:45:11.473Z"
   }
 ]

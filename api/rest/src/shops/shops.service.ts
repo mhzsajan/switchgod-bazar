@@ -33,6 +33,7 @@ export class ShopsService {
   }
 
   create(createShopDto: CreateShopDto) {
+    this.reloadFromFile();
     const newId = this.shops.length > 0
       ? Math.max(...this.shops.map((s) => s.id)) + 1
       : 1;
@@ -59,6 +60,7 @@ export class ShopsService {
   }
 
   getShops({ search, limit, page, is_active }: GetShopsDto) {
+    this.reloadFromFile();
     if (!page) page = 1;
 
     const startIndex = (page - 1) * limit;
@@ -79,11 +81,17 @@ export class ShopsService {
       if (fuzzyFilters.length) {
         data = fuse.search({ $and: fuzzyFilters })?.map(({ item }) => item);
       }
-    } else if (is_active !== undefined) {
-      data = data.filter((item) => Boolean(item.is_active) === is_active);
+    } else if (is_active !== undefined && is_active !== null) {
+      // is_active arrives as string "1"/"0" from query params
+      const raw: any = is_active;
+      const wanted =
+        raw === true || raw === 'true' || raw === '1' || raw === 1;
+      data = data.filter((item) => Boolean(item.is_active) === wanted);
     }
 
-    const results = data.slice(startIndex, endIndex);
+    const results = data
+      .slice(startIndex, endIndex)
+      .map((shop) => this.withCounts(shop));
     const url = `/shops?search=${search}&limit=${limit}`;
 
     return {
@@ -142,7 +150,9 @@ export class ShopsService {
   }
 
   getShop(slug: string): Shop {
-    return this.shops.find((p) => p.slug === slug);
+    this.reloadFromFile();
+    const shop = this.shops.find((p) => p.slug === slug);
+    return this.withCounts(shop) as Shop;
   }
 
   getNearByShop(lat: string, lng: string) {
@@ -150,6 +160,7 @@ export class ShopsService {
   }
 
   update(id: number, updateShopDto: UpdateShopDto) {
+    this.reloadFromFile();
     const index = this.shops.findIndex((s) => s.id === Number(id));
     if (index === -1) return null;
     this.shops[index] = {
@@ -171,6 +182,7 @@ export class ShopsService {
   }
 
   remove(id: number) {
+    this.reloadFromFile();
     const index = this.shops.findIndex((s) => s.id === Number(id));
     if (index === -1) return null;
     const removed = this.shops.splice(index, 1)[0];
@@ -201,6 +213,56 @@ export class ShopsService {
       true,
     );
     return shop;
+  }
+
+  private reloadFromFile() {
+    for (const base of ['dist', 'src']) {
+      try {
+        const p = path.join(
+          process.cwd(),
+          base,
+          'db',
+          'pickbazar',
+          'shops.json',
+        );
+        this.shops = JSON.parse(fs.readFileSync(p, 'utf8'));
+        this.nearShops = this.shops;
+        return;
+      } catch {
+        continue;
+      }
+    }
+  }
+
+  private countProducts(shopId: number): number {
+    for (const base of ['dist', 'src']) {
+      try {
+        const p = path.join(
+          process.cwd(),
+          base,
+          'db',
+          'pickbazar',
+          'products.json',
+        );
+        const products = JSON.parse(fs.readFileSync(p, 'utf8'));
+        return products.filter(
+          (prod: any) =>
+            Number(prod.shop_id) === Number(shopId) ||
+            Number((prod.shop || {}).id) === Number(shopId),
+        ).length;
+      } catch {
+        continue;
+      }
+    }
+    return 0;
+  }
+
+  private withCounts(shop: any): any {
+    if (!shop) return shop;
+    return {
+      ...shop,
+      products_count: this.countProducts(shop.id),
+    };
   }
 
     private saveToFile() {

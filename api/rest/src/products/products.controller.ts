@@ -7,6 +7,7 @@ import {
   Delete,
   Query,
   Put,
+  NotFoundException,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -32,7 +33,11 @@ export class ProductsController {
 
   @Get(':slug')
   async getProductBySlug(@Param('slug') slug: string): Promise<Product> {
-    return this.productsService.getProductBySlug(slug);
+    const product = this.productsService.getProductBySlug(slug);
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+    return product;
   }
 
   @Put(':id')
